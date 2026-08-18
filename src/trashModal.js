@@ -2,6 +2,7 @@
 
 import { untrackImage } from './deduplication.js';
 import { showToast } from './utils.js';
+import { showConfirm } from './confirmModal.js';
 
 export class TrashModalManager {
 	constructor(onImagesDeleted) {
@@ -55,25 +56,23 @@ export class TrashModalManager {
 
 			const thumb = document.createElement('img');
 			thumb.src = img.dataset.animatedSrc || img.src;
-
-			const check = document.createElement('input');
-			check.type = 'checkbox';
-			check.className = 'trash-checkbox';
+			thumb.style.pointerEvents = 'none'; // Ensure click passes to tile cleanly
 
 			tile.appendChild(thumb);
-			tile.appendChild(check);
+
+			if (this._selectedSet.has(img)) {
+				tile.classList.add('selected');
+			}
 
 			tile.addEventListener('click', (e) => {
+				e.preventDefault();
 				e.stopPropagation();
-				const isSelected = this._selectedSet.has(img);
-				if (isSelected) {
+				if (this._selectedSet.has(img)) {
 					this._selectedSet.delete(img);
 					tile.classList.remove('selected');
-					check.checked = false;
 				} else {
 					this._selectedSet.add(img);
 					tile.classList.add('selected');
-					check.checked = true;
 				}
 				this._updateCountDisplay();
 			});
@@ -127,11 +126,19 @@ export class TrashModalManager {
 		}
 
 		if (deleteSelectedBtn) {
-			deleteSelectedBtn.onclick = () => {
+			deleteSelectedBtn.onclick = async () => {
 				const toDelete = Array.from(this._selectedSet);
 				if (toDelete.length === 0) return;
 
-				if (confirm(`Delete ${toDelete.length} selected image${toDelete.length > 1 ? 's' : ''}?`)) {
+				const ok = await showConfirm({
+					title: 'Delete Selected Images',
+					message: `Delete ${toDelete.length} selected image${toDelete.length > 1 ? 's' : ''}?`,
+					confirmText: 'Delete Selected',
+					cancelText: 'Cancel',
+					danger: true
+				});
+
+				if (ok) {
 					this._deleteImages(toDelete);
 					this.close();
 				}
@@ -139,11 +146,19 @@ export class TrashModalManager {
 		}
 
 		if (deleteAllBtn) {
-			deleteAllBtn.onclick = () => {
+			deleteAllBtn.onclick = async () => {
 				const allImgs = Array.from(document.querySelectorAll('.images img.draggable, .tierlist img.draggable'));
 				if (allImgs.length === 0) return;
 
-				if (confirm(`⚠️ Delete ALL ${allImgs.length} images from the project? This action cannot be undone.`)) {
+				const ok = await showConfirm({
+					title: 'Delete ALL Images',
+					message: `⚠️ Delete ALL ${allImgs.length} images from the project? This action cannot be undone.`,
+					confirmText: 'Delete ALL',
+					cancelText: 'Cancel',
+					danger: true
+				});
+
+				if (ok) {
 					this._deleteImages(allImgs);
 					this.close();
 				}

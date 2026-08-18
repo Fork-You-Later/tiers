@@ -99,6 +99,14 @@ export class App {
 		const budgetDisplay = document.getElementById('budget-display');
 		if (budgetDisplay) this.budgetMode.setDisplayElement(budgetDisplay);
 
+		// Mystery mode enabled by default from the start
+		this.mysteryMode.enable();
+		const mysteryToggle = document.getElementById('toggle-mystery');
+		if (mysteryToggle) {
+			mysteryToggle.classList.add('active');
+			mysteryToggle.setAttribute('aria-checked', 'true');
+		}
+
 		this.bindTitleEvents();
 		this.bindFileInputEvents();
 		this.bindClipboardEvents();
@@ -132,6 +140,7 @@ export class App {
 		}
 		applyLoopToNewImage(img);
 		enableBadgesOnImage(img);
+		this.mysteryMode.attachPreviewOnClick(img);
 		return img;
 	}
 

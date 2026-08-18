@@ -47,7 +47,13 @@ export class DragDropManager {
 			if (row_header !== undefined) {
 				const headerRect = row_header.getBoundingClientRect();
 				left = headerRect.right + scrollLeft;
+			} else {
+				// Elem is an image card inside the row — position line AFTER it (on its right side)
+				left = rect.right + scrollLeft;
 			}
+		} else {
+			// Position line on the right side of the card
+			left = rect.right + scrollLeft;
 		}
 
 		this.placementMarkerDiv.style.position = 'absolute';

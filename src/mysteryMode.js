@@ -133,6 +133,53 @@ export class MysteryMode {
 		this.onRevealComplete(img);
 	}
 
+	async previewCard(img) {
+		if (!img) return;
+		const modal = this._getModal();
+		if (!modal) return;
+
+		const revealImg = modal.querySelector('#mystery-reveal-img');
+		if (revealImg) revealImg.src = img.dataset.animatedSrc || img.src;
+
+		modal.classList.remove('hidden');
+		modal.classList.add('mystery-active');
+
+		const inner = modal.querySelector('.mystery-card-inner');
+		const shockwave = modal.querySelector('#mystery-shockwave');
+
+		if (inner) {
+			inner.classList.remove('flipped');
+			void inner.offsetWidth;
+			inner.classList.add('flipped');
+		}
+
+		await this._delay(300);
+		if (shockwave) {
+			shockwave.classList.remove('shockwave-burst');
+			void shockwave.offsetWidth;
+			shockwave.classList.add('shockwave-burst');
+		}
+
+		await new Promise(resolve => {
+			modal.addEventListener('click', resolve, { once: true });
+		});
+
+		modal.classList.remove('mystery-active');
+		modal.classList.add('hidden');
+		if (inner) inner.classList.remove('flipped');
+	}
+
+	attachPreviewOnClick(img) {
+		if (!img || img.dataset.hasPreviewListener) return;
+		img.dataset.hasPreviewListener = 'true';
+		img.addEventListener('click', (e) => {
+			// Trigger preview animation on click for cards placed in tierlist or revealed in pool
+			if (this.revealedSet.has(img) || img.closest('.tierlist') || !this.enabled) {
+				this.previewCard(img);
+			}
+		});
+	}
+
 	_delay(ms) {
 		return new Promise(r => setTimeout(r, ms));
 	}
