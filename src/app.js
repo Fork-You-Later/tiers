@@ -5,7 +5,7 @@ import { is_url, showToast } from './utils.js';
 import { serialize_tierlist, save_tierlist, load_tierlist } from './serializer.js';
 import { TierlistManager } from './tierlist.js';
 import { DragDropManager } from './dragDrop.js';
-import { loadZip } from './zipLoader.js';
+import { loadZip, blobToDataURL } from './zipLoader.js';
 import { isDuplicate, clearHashes, computeHash, registerImageHash } from './deduplication.js';
 import { applyLoopToNewImage, applyGlobalLoopSetting, isLoopEnabled } from './animationControl.js';
 import { enableBadgesOnImage, getBadgesForImage, restoreBadgesOnImage } from './badges.js';
@@ -14,6 +14,8 @@ import { MysteryMode } from './mysteryMode.js';
 import { EloSorter } from './eloSorter.js';
 import { saveToStorage, loadFromStorage, clearStorage } from './storage.js';
 import { TrashModalManager } from './trashModal.js';
+import { showConfirm, showPrompt } from './confirmModal.js';
+import { readImageFromClipboard } from './clipboard.js';
 
 export class App {
 	constructor() {
@@ -100,7 +102,7 @@ export class App {
 		this.bindTitleEvents();
 		this.bindFileInputEvents();
 		this.bindClipboardEvents();
-		this.bindButtonEvents();
+		this.bindGlobalDropEvents();
 		this.bindToolbarEvents();
 		this.bindTrashModalEvents();
 		this.dragDropManager.bindTrashEvents();
@@ -142,45 +144,38 @@ export class App {
 		this.setUnsavedChanges(true);
 	}
 
-	bindFileInputEvents() {
-		const loadImgInput = document.getElementById('load-img-input');
-		if (loadImgInput) {
-			loadImgInput.addEventListener('input', async (evt) => {
-				let added = 0;
-				let dupes = 0;
-				for (let file of evt.target.files) {
-					if (file.type.startsWith('image/')) {
-						const isDupe = await isDuplicate(file);
-						if (isDupe) { dupes++; continue; }
-						const hash = await computeHash(file);
-						const reader = new FileReader();
-						reader.addEventListener('load', (load_evt) => {
-							const img = this.createImage(load_evt.target.result, hash);
-							this.appendImageToPool(img);
-						});
-						reader.readAsDataURL(file);
-						added++;
-					}
-				}
-				if (dupes > 0) showToast(`🖼️ ${added} added, ${dupes} duplicate${dupes !== 1 ? 's' : ''} skipped`);
-				evt.target.value = '';
-			});
+	async processIncomingFile(file) {
+		if (!file) return;
+		if (file.name.endsWith('.zip')) {
+			showToast('📦 Extracting ZIP…');
+			try {
+				await loadZip(file, (dataUrl, filename, hash) => {
+					const img = this.createImage(dataUrl, hash);
+					this.appendImageToPool(img);
+				});
+			} catch (e) {
+				showToast('❌ Failed to extract ZIP: ' + e.message);
+			}
+		} else if (file.type.startsWith('image/')) {
+			const isDupe = await isDuplicate(file);
+			if (isDupe) {
+				showToast(`🖼️ Duplicate image skipped (${file.name})`);
+				return;
+			}
+			const hash = await computeHash(file);
+			const dataUrl = await blobToDataURL(file);
+			const img = this.createImage(dataUrl, hash);
+			this.appendImageToPool(img);
 		}
+	}
 
-		const loadZipInput = document.getElementById('load-zip-input');
-		if (loadZipInput) {
-			loadZipInput.addEventListener('input', async (evt) => {
-				const file = evt.target.files[0];
-				if (!file) return;
-				showToast('📦 Extracting ZIP…');
-				try {
-					await loadZip(file, (dataUrl, filename, hash) => {
-						const img = this.createImage(dataUrl, hash);
-						this.appendImageToPool(img);
-					});
-				} catch (e) {
-					showToast('❌ Failed to extract ZIP: ' + e.message);
-					console.error(e);
+	// ── Unified Media Input (Images + ZIP) ──────────────────────────────────
+	bindFileInputEvents() {
+		const loadMediaInput = document.getElementById('load-media-input');
+		if (loadMediaInput) {
+			loadMediaInput.addEventListener('input', async (evt) => {
+				for (let file of evt.target.files) {
+					await this.processIncomingFile(file);
 				}
 				evt.target.value = '';
 			});
@@ -217,6 +212,47 @@ export class App {
 		}
 	}
 
+	// ── Full-page Drag & Drop ───────────────────────────────────────────────
+	bindGlobalDropEvents() {
+		const dropOverlay = document.getElementById('full-page-drop-overlay');
+
+		let dragCounter = 0;
+
+		window.addEventListener('dragenter', (e) => {
+			e.preventDefault();
+			dragCounter++;
+			if (e.dataTransfer && e.dataTransfer.types && Array.from(e.dataTransfer.types).includes('Files')) {
+				if (dropOverlay) dropOverlay.classList.remove('hidden');
+			}
+		});
+
+		window.addEventListener('dragleave', (e) => {
+			e.preventDefault();
+			dragCounter--;
+			if (dragCounter <= 0 && dropOverlay) {
+				dropOverlay.classList.add('hidden');
+				dragCounter = 0;
+			}
+		});
+
+		window.addEventListener('dragover', (e) => {
+			e.preventDefault();
+		});
+
+		window.addEventListener('drop', async (e) => {
+			e.preventDefault();
+			dragCounter = 0;
+			if (dropOverlay) dropOverlay.classList.add('hidden');
+
+			if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+				for (let file of e.dataTransfer.files) {
+					await this.processIncomingFile(file);
+				}
+			}
+		});
+	}
+
+	// ── Clipboard Paste (Desktop & Mobile Button) ───────────────────────────
 	bindClipboardEvents() {
 		document.onpaste = async (evt) => {
 			let clip_data = evt.clipboardData || evt.originalEvent?.clipboardData;
@@ -227,41 +263,25 @@ export class App {
 					const isDupe = await isDuplicate(blob);
 					if (isDupe) { showToast('📋 Duplicate image skipped'); continue; }
 					const hash = await computeHash(blob);
-					let reader = new FileReader();
-					reader.onload = (load_evt) => {
-						let img = this.createImage(load_evt.target.result, hash);
-						this.appendImageToPool(img);
-					};
-					reader.readAsDataURL(blob);
+					const dataUrl = await blobToDataURL(blob);
+					const img = this.createImage(dataUrl, hash);
+					this.appendImageToPool(img);
 				}
 			}
 		};
-	}
 
-	bindButtonEvents() {
-		const resetBtn = document.getElementById('reset-list-input');
-		if (resetBtn) {
-			resetBtn.addEventListener('click', () => {
-				if (confirm('Reset Tierlist? (this will place all images back in the pool)')) {
-					this.tierlistManager.softResetList();
-					this.budgetMode.update(this.tierlistDiv);
-				}
-			});
-		}
-
-		const exportBtn = document.getElementById('export-input');
-		if (exportBtn) {
-			exportBtn.addEventListener('click', () => {
-				let name = prompt('Please give a name to this tierlist');
-				if (name) {
-					save_tierlist(
-						`${name}.json`,
-						this.tierlistDiv,
-						this.untieredImages,
-						this.titleLabel,
-						(val) => this.setUnsavedChanges(val),
-						getBadgesForImage
-					);
+		const pasteBtn = document.getElementById('paste-clipboard-btn');
+		if (pasteBtn) {
+			pasteBtn.addEventListener('click', async () => {
+				const blob = await readImageFromClipboard();
+				if (blob) {
+					const isDupe = await isDuplicate(blob);
+					if (isDupe) { showToast('📋 Duplicate image skipped'); return; }
+					const hash = await computeHash(blob);
+					const dataUrl = await blobToDataURL(blob);
+					const img = this.createImage(dataUrl, hash);
+					this.appendImageToPool(img);
+					showToast('📋 Image pasted from clipboard!');
 				}
 			});
 		}
@@ -271,7 +291,6 @@ export class App {
 		const trashContainer = document.getElementById('floating-trash-container');
 		if (trashContainer) {
 			trashContainer.addEventListener('click', (e) => {
-				// Only open trash modal if not actively dragging an image onto it
 				if (!this.dragDropManager.draggedImage) {
 					this.trashModalManager.open();
 				}
@@ -279,6 +298,7 @@ export class App {
 		}
 	}
 
+	// ── Settings Dropdown & Toolbar Items ──────────────────────────────────
 	bindToolbarEvents() {
 		const menuToggleBtn = document.getElementById('toggle-tools-menu');
 		const toolbar = document.getElementById('feature-toolbar');
@@ -296,6 +316,48 @@ export class App {
 			});
 		}
 
+		// Soft Reset button (inside Settings dropdown)
+		const resetBtn = document.getElementById('reset-list-input');
+		if (resetBtn) {
+			resetBtn.addEventListener('click', async () => {
+				const ok = await showConfirm({
+					title: 'Reset Tierlist',
+					message: 'Place all ranked images back into the unranked pool?',
+					confirmText: 'Reset Tierlist',
+					cancelText: 'Cancel',
+					danger: true
+				});
+				if (ok) {
+					this.tierlistManager.softResetList();
+					this.budgetMode.update(this.tierlistDiv);
+				}
+			});
+		}
+
+		// Export JSON button (inside Settings dropdown)
+		const exportBtn = document.getElementById('export-input');
+		if (exportBtn) {
+			exportBtn.addEventListener('click', async () => {
+				const name = await showPrompt({
+					title: 'Export Tierlist JSON',
+					message: 'Enter a name for this tierlist save file:',
+					defaultValue: this.titleLabel ? this.titleLabel.innerText : 'MyTierList',
+					placeholder: 'Tierlist Name'
+				});
+				if (name) {
+					save_tierlist(
+						`${name}.json`,
+						this.tierlistDiv,
+						this.untieredImages,
+						this.titleLabel,
+						(val) => this.setUnsavedChanges(val),
+						getBadgesForImage
+					);
+				}
+			});
+		}
+
+		// Mystery Mode radio toggle
 		const mysteryToggle = document.getElementById('toggle-mystery');
 		if (mysteryToggle) {
 			mysteryToggle.addEventListener('click', () => {
@@ -303,17 +365,18 @@ export class App {
 				if (enabled) {
 					this.mysteryMode.enable();
 					mysteryToggle.classList.add('active');
-					mysteryToggle.title = 'Mystery Mode: ON';
+					mysteryToggle.setAttribute('aria-checked', 'true');
 					showToast('🃏 Mystery Mode ON — click cards to reveal!');
 				} else {
 					this.mysteryMode.disable();
 					mysteryToggle.classList.remove('active');
-					mysteryToggle.title = 'Mystery Mode: OFF';
+					mysteryToggle.setAttribute('aria-checked', 'false');
 					showToast('🃏 Mystery Mode OFF');
 				}
 			});
 		}
 
+		// Animation Loop radio toggle
 		const loopToggle = document.getElementById('toggle-loop');
 		if (loopToggle) {
 			loopToggle.addEventListener('click', async () => {
@@ -321,30 +384,39 @@ export class App {
 				const allImgs = document.querySelectorAll('.images img.draggable, .tierlist img.draggable');
 				await applyGlobalLoopSetting(newEnabled, allImgs);
 				loopToggle.classList.toggle('active', !newEnabled);
-				loopToggle.title = newEnabled ? 'Animations: ON' : 'Animations: OFF (hover to preview)';
+				loopToggle.setAttribute('aria-checked', newEnabled ? 'true' : 'false');
 				showToast(newEnabled ? '▶️ Animations enabled' : '⏸️ Animations frozen');
 			});
 		}
 
+		// Budget Mode radio toggle
 		const budgetToggle = document.getElementById('toggle-budget');
 		if (budgetToggle) {
-			budgetToggle.addEventListener('click', () => {
+			budgetToggle.addEventListener('click', async () => {
 				if (this.budgetMode.enabled) {
 					this.budgetMode.disable();
 					budgetToggle.classList.remove('active');
+					budgetToggle.setAttribute('aria-checked', 'false');
 					showToast('💰 Budget Mode OFF');
 				} else {
-					const val = prompt('Set total budget (number of points):', this.budgetMode.budget);
+					const val = await showPrompt({
+						title: 'Budget Mode',
+						message: 'Set total points budget for this tierlist:',
+						defaultValue: String(this.budgetMode.budget),
+						placeholder: '15'
+					});
 					if (val === null) return;
 					const budget = parseFloat(val) || 15;
 					this.budgetMode.enable(budget);
 					budgetToggle.classList.add('active');
+					budgetToggle.setAttribute('aria-checked', 'true');
 					this.budgetMode.update(this.tierlistDiv);
 					showToast(`💰 Budget Mode ON — $${budget} budget`);
 				}
 			});
 		}
 
+		// Elo sorter launch
 		const eloBtn = document.getElementById('toggle-elo');
 		if (eloBtn) {
 			eloBtn.addEventListener('click', () => {
@@ -352,6 +424,7 @@ export class App {
 			});
 		}
 
+		// PNG Export
 		const pngBtn = document.getElementById('export-png-btn');
 		if (pngBtn) {
 			pngBtn.addEventListener('click', async () => {

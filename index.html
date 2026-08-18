@@ -28,54 +28,97 @@
       <div class="top-bar">
         <div class="top-bar-left">
           <a href="https://github.com/Fork-You-Later/tiers" class="gh-link" title="View on GitHub" target="_blank" rel="noopener">
-            <img src="assets/github.svg" class="gh-logo" alt="GitHub"/>
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
           </a>
           <div class="title">
             <label class="title-label" for="title-input">My TierList</label>
             <input type="text" id="title-input"/>
           </div>
         </div>
+
         <div class="top-bar-right">
-          <!-- Tools Menu Toggle Button -->
-          <button id="toggle-tools-menu" class="toolbar-btn tools-menu-btn" title="Toggle Feature Tools Menu">
-            ⚙️ Tools ▾
+          <!-- Quick Add Media Button -->
+          <label class="toolbar-btn quick-add-btn" for="load-media-input" title="Add images or ZIP sticker packs">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Add Media
+          </label>
+
+          <!-- Settings Dropdown Toggle Button -->
+          <button id="toggle-tools-menu" class="toolbar-btn tools-menu-btn" title="Settings Menu">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+            </svg>
+            Settings ▾
           </button>
 
           <!-- Toggle Layout Button -->
-          <div class="button layout-btn-box" title="Toggle Horizontal / Vertical Layout">
-            <label for="toggle-layout">
-              <img src="assets/toggle_layout.png" alt="Toggle Layout"/>
-            </label>
-            <input id="toggle-layout" type="button"/>
-          </div>
+          <button id="toggle-layout" class="toolbar-btn icon-only-btn" title="Toggle Horizontal / Vertical Layout">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <path d="M9 3v18"/>
+            </svg>
+          </button>
         </div>
       </div>
 
-      <!-- Feature Toolbar (Popover Menu) -->
+      <!-- Feature & Actions Settings Popover Menu -->
       <div id="feature-toolbar" class="feature-popover">
-        <label class="toolbar-btn" for="load-zip-input" title="Load ZIP sticker pack">
-          📦 ZIP
-          <input id="load-zip-input" type="file" accept=".zip"/>
+        <div class="popover-section-title">📥 Add & Import</div>
+
+        <!-- Unified Media Input (Images + ZIP) -->
+        <label class="toolbar-btn popover-item-btn" for="load-media-input" title="Add images or ZIP sticker pack">
+          ➕ Add Media (Images / ZIP)
+          <input id="load-media-input" type="file" accept="image/*,.zip" multiple/>
         </label>
 
-        <button id="toggle-mystery" class="toolbar-btn" title="Mystery Mode: OFF">
-          🃏 Mystery
+        <!-- Mobile & Desktop Clipboard Paste Button -->
+        <button id="paste-clipboard-btn" class="toolbar-btn popover-item-btn" title="Paste image from clipboard">
+          📋 Paste Image from Clipboard
         </button>
 
-        <button id="toggle-loop" class="toolbar-btn" title="Animations: ON">
-          ▶️ Anim
+        <label class="toolbar-btn popover-item-btn" for="import-input" title="Import JSON tierlist save file">
+          📂 Import JSON Save
+          <input id="import-input" type="file" accept=".json"/>
+        </label>
+
+        <div class="popover-section-title">⚙️ Modes & Toggles</div>
+
+        <button id="toggle-mystery" class="toolbar-btn popover-item-btn radio-toggle-btn" role="switch" aria-checked="false" title="Mystery Mode">
+          <span class="toggle-label">🃏 Mystery Mode</span>
+          <span class="toggle-pill"><span class="toggle-thumb"></span></span>
         </button>
 
-        <button id="toggle-budget" class="toolbar-btn" title="Budget Mode">
-          💰 Budget
+        <button id="toggle-loop" class="toolbar-btn popover-item-btn radio-toggle-btn active" role="switch" aria-checked="true" title="Animated WebP / GIF Loop">
+          <span class="toggle-label">▶️ GIF Animations</span>
+          <span class="toggle-pill"><span class="toggle-thumb"></span></span>
         </button>
 
-        <button id="toggle-elo" class="toolbar-btn" title="Start Elo 1v1 battles">
-          ⚔️ Elo Sort
+        <button id="toggle-budget" class="toolbar-btn popover-item-btn radio-toggle-btn" role="switch" aria-checked="false" title="Budget Tracker Mode">
+          <span class="toggle-label">💰 Budget Tracker</span>
+          <span class="toggle-pill"><span class="toggle-thumb"></span></span>
         </button>
 
-        <button id="export-png-btn" class="toolbar-btn" title="Export tierlist as PNG">
-          📸 PNG
+        <div class="popover-section-title">🛠 Tools & Export</div>
+
+        <button id="toggle-elo" class="toolbar-btn popover-item-btn" title="Start Elo 1v1 battle sorter">
+          ⚔️ Elo 1v1 Battle Sorter
+        </button>
+
+        <button id="export-png-btn" class="toolbar-btn popover-item-btn" title="Export tierlist as PNG image">
+          📸 Export PNG Image
+        </button>
+
+        <button id="export-input" class="toolbar-btn popover-item-btn" title="Export tierlist JSON save file">
+          💾 Save to JSON File
+        </button>
+
+        <button id="reset-list-input" class="toolbar-btn popover-item-btn danger-item" title="Reset all ranked items back to pool">
+          🔄 Reset Ranked Items
         </button>
 
         <!-- Budget display -->
@@ -88,41 +131,40 @@
       <div class="tierlist"></div>
       <div class="toggleable-container">
         <div class="bottom-container">
-          <div class="buttons-container">
-            <div class="button" title="Add images">
-              <label for="load-img-input">
-                <img src="assets/plus.png" alt="Add"/>
-              </label>
-              <input id="load-img-input" type="file" accept="image/*" multiple/>
-            </div>
-            <div class="button" title="Reset list">
-              <label for="reset-list-input">
-                <img src="assets/reset.png" alt="Reset">
-              </label>
-              <input id="reset-list-input" type="button"/>
-            </div>
-            <div class="button" title="Export JSON">
-              <label for="export-input">
-                <img src="assets/export.png" alt="Export">
-              </label>
-              <input id="export-input" type="button"/>
-            </div>
-            <div class="button" title="Import JSON">
-              <label for="import-input">
-                <img src="assets/import.png" alt="Import"/>
-              </label>
-              <input id="import-input" type="file" accept=".json"/>
-            </div>
-          </div>
           <section class="images"></section>
         </div>
-        <p class="hint">💡 Drag images to rank them · Right-click a card to add badges · Click trash icon to delete images</p>
+        <p class="hint">💡 Drag images anywhere onto the page · Right-click cards for badges · Click trash to delete</p>
       </div>
     </section>
 
     <!-- ── Bottom Right Floating Trash Bin ───────────────────────────── -->
     <div id="floating-trash-container" title="Click to manage/delete images, or drag an image here to delete it">
       <img id="trash" src="assets/trash_bin.png" alt="Trash"/>
+    </div>
+
+    <!-- ── Full-Page Drag & Drop Overlay ─────────────────────────────── -->
+    <div id="full-page-drop-overlay" class="hidden">
+      <div class="drop-overlay-box">
+        <svg class="drop-overlay-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+        </svg>
+        <h3>Drop Images or ZIP Anywhere</h3>
+        <p>Release to add files directly into your tier pool</p>
+      </div>
+    </div>
+
+    <!-- ── Custom Confirm / Prompt Dialog Modal ──────────────────────── -->
+    <div id="custom-dialog-modal" class="hidden" role="dialog" aria-modal="true">
+      <div class="dialog-backdrop"></div>
+      <div class="dialog-card">
+        <h3 class="dialog-title">Confirm Action</h3>
+        <p class="dialog-message">Are you sure?</p>
+        <input type="text" class="dialog-input" style="display: none;"/>
+        <div class="dialog-actions">
+          <button class="dialog-btn dialog-cancel-btn">Cancel</button>
+          <button class="dialog-btn dialog-confirm-btn dialog-btn-primary">Confirm</button>
+        </div>
+      </div>
     </div>
 
     <!-- ── Mystery Mode Modal ─────────────────────────────────────── -->

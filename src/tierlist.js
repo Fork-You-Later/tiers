@@ -1,6 +1,7 @@
 'use strict';
 
 import { MAX_NAME_LEN, TIER_COLORS, LAYOUT_HORIZONTAL, LAYOUT_VERTICAL } from './constants.js';
+import { showConfirm } from './confirmModal.js';
 
 export class TierlistManager {
 	constructor(tierlistDiv, untieredImages, onUnsavedChange) {
@@ -11,7 +12,7 @@ export class TierlistManager {
 		this.headersOrigMinWidth = 100;
 		this.curLayout = LAYOUT_HORIZONTAL;
 		this.uniqueId = 0;
-		this.makeAcceptDropFn = null; // injected by DragDrop module
+		this.makeAcceptDropFn = null;
 	}
 
 	setMakeAcceptDrop(fn) {
@@ -71,7 +72,7 @@ export class TierlistManager {
 					evt_timestamp = evt.timeStamp;
 				}
 			} else if (evt.timeStamp <= evt_timestamp + 200) {
-				// Do nothing (grace period for Firefox color picker)
+				// Do nothing
 			} else {
 				change_label();
 			}
@@ -130,7 +131,6 @@ export class TierlistManager {
 				max_width = Math.max(max_width, label.scrollWidth || label.clientWidth || 100);
 			}
 		}
-		// Cap header width so it doesn't push row items away
 		max_width = Math.min(max_width, 160);
 
 		for (let [other_header, _i2, _l2] of this.allHeaders) {
@@ -171,7 +171,7 @@ export class TierlistManager {
 		btn_rm.type = "button";
 		btn_rm.value = '-';
 		btn_rm.title = "Remove row";
-		btn_rm.addEventListener('click', (evt) => {
+		btn_rm.addEventListener('click', async (evt) => {
 			let rows = Array.from(this.tierlistDiv.querySelectorAll('.row'));
 			if (rows.length < 2) return;
 			let parent_div = evt.target.parentNode.parentNode;
@@ -179,9 +179,19 @@ export class TierlistManager {
 			console.assert(idx >= 0);
 			const label = rows[idx].querySelector('.header label');
 			const labelText = label ? (label.innerText ?? label.textContent ?? '') : '';
-			if (rows[idx].querySelectorAll('img').length === 0 ||
-				confirm(`Remove tier ${labelText}? (This will move back all its content to the untiered pool)`)) {
+			const hasImgs = rows[idx].querySelectorAll('img').length > 0;
+
+			if (!hasImgs) {
 				this.removeRow(idx);
+			} else {
+				const ok = await showConfirm({
+					title: 'Remove Tier',
+					message: `Remove tier "${labelText}"? All images inside it will be returned to the pool.`,
+					confirmText: 'Remove Tier',
+					cancelText: 'Cancel',
+					danger: true
+				});
+				if (ok) this.removeRow(idx);
 			}
 		});
 

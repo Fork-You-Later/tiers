@@ -152,34 +152,51 @@ export class DragDropManager {
 	}
 
 	bindTrashEvents() {
-		let trash = document.getElementById('trash');
-		if (!trash) return;
-		trash.classList.add('droppable');
-		trash.addEventListener('dragenter', (evt) => {
-			evt.preventDefault();
-			evt.target.src = 'assets/trash_bin_open.png';
-		});
-		trash.addEventListener('dragexit', (evt) => {
-			evt.preventDefault();
-			evt.target.src = 'assets/trash_bin.png';
-		});
-		trash.addEventListener('dragover', (evt) => {
-			evt.preventDefault();
-		});
-		trash.addEventListener('drop', (evt) => {
-			evt.preventDefault();
-			evt.target.src = 'assets/trash_bin.png';
-			if (this.draggedImage) {
-				untrackImage(this.draggedImage);
-				let dragged_image_parent = this.draggedImage.parentNode;
-				if (dragged_image_parent && dragged_image_parent.tagName.toUpperCase() === 'SPAN' &&
-					dragged_image_parent.classList.contains('item')) {
-					let containing_tr = dragged_image_parent.parentNode;
-					if (containing_tr) containing_tr.removeChild(dragged_image_parent);
+		const trashContainer = document.getElementById('floating-trash-container');
+		const trashImg = document.getElementById('trash');
+		const targets = [trashContainer, trashImg].filter(Boolean);
+
+		targets.forEach(target => {
+			target.classList.add('droppable');
+
+			target.addEventListener('dragenter', (evt) => {
+				evt.preventDefault();
+				if (trashImg) trashImg.src = 'assets/trash_bin_open.png';
+				if (trashContainer) trashContainer.classList.add('trash-hover');
+			});
+
+			target.addEventListener('dragleave', (evt) => {
+				evt.preventDefault();
+				if (trashImg) trashImg.src = 'assets/trash_bin.png';
+				if (trashContainer) trashContainer.classList.remove('trash-hover');
+			});
+
+			target.addEventListener('dragover', (evt) => {
+				evt.preventDefault();
+				evt.dataTransfer.dropEffect = 'move';
+			});
+
+			target.addEventListener('drop', (evt) => {
+				evt.preventDefault();
+				evt.stopPropagation();
+				if (trashImg) trashImg.src = 'assets/trash_bin.png';
+				if (trashContainer) trashContainer.classList.remove('trash-hover');
+
+				if (this.draggedImage) {
+					untrackImage(this.draggedImage);
+					const draggedParent = this.draggedImage.parentNode;
+					if (draggedParent && draggedParent.tagName.toUpperCase() === 'SPAN' && draggedParent.classList.contains('item')) {
+						const containingTr = draggedParent.parentNode;
+						if (containingTr) containingTr.removeChild(draggedParent);
+					}
+					this.draggedImage.remove();
+					this.draggedImage = null;
+					this.onUnsavedChange(true);
+					import('./utils.js').then(({ showToast }) => {
+						showToast('🗑️ Image deleted');
+					});
 				}
-				this.draggedImage.remove();
-				this.onUnsavedChange(true);
-			}
+			});
 		});
 	}
 }
