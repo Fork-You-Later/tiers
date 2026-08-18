@@ -245,12 +245,12 @@ export class MysteryMode {
 		if (!img || img.dataset.hasPreviewListener) return;
 		img.dataset.hasPreviewListener = 'true';
 		img.addEventListener('click', (e) => {
-			// Only trigger preview when mystery mode is enabled
-			// AND the card is already revealed or is in the tier list
-			if (!this.enabled) return;
-			if (this.revealedSet.has(img) || img.closest('.tierlist')) {
-				this.previewCard(img);
+			// Always trigger preview globally on click for adding badges.
+			// The only exception is if mystery mode is on AND the card is face-down (unrevealed) in the pool.
+			if (this.enabled && !this.revealedSet.has(img) && !img.closest('.tierlist')) {
+				return;
 			}
+			this.previewCard(img);
 		});
 	}
 
