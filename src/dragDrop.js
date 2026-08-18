@@ -153,21 +153,18 @@ export class DragDropManager {
 
 	bindTrashEvents() {
 		const trashContainer = document.getElementById('floating-trash-container');
-		const trashImg = document.getElementById('trash');
-		const targets = [trashContainer, trashImg].filter(Boolean);
+		const targets = [trashContainer].filter(Boolean);
 
 		targets.forEach(target => {
 			target.classList.add('droppable');
 
 			target.addEventListener('dragenter', (evt) => {
 				evt.preventDefault();
-				if (trashImg) trashImg.src = 'assets/trash_bin_open.png';
 				if (trashContainer) trashContainer.classList.add('trash-hover');
 			});
 
 			target.addEventListener('dragleave', (evt) => {
 				evt.preventDefault();
-				if (trashImg) trashImg.src = 'assets/trash_bin.png';
 				if (trashContainer) trashContainer.classList.remove('trash-hover');
 			});
 
@@ -179,7 +176,6 @@ export class DragDropManager {
 			target.addEventListener('drop', (evt) => {
 				evt.preventDefault();
 				evt.stopPropagation();
-				if (trashImg) trashImg.src = 'assets/trash_bin.png';
 				if (trashContainer) trashContainer.classList.remove('trash-hover');
 
 				if (this.draggedImage) {

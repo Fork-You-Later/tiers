@@ -10,7 +10,7 @@ describe('dragDrop.js DragDropManager unit tests', () => {
 
 	beforeEach(() => {
 		document.body.innerHTML = `
-			<div class="top-container">
+			<div id="floating-trash-container">
 				<img id="trash" src="assets/trash_bin.png" />
 			</div>
 			<main class="main-content">
@@ -20,7 +20,7 @@ describe('dragDrop.js DragDropManager unit tests', () => {
 		`;
 		tierlistDiv = document.querySelector('.tierlist');
 		untieredImages = document.querySelector('.images');
-		trashElem = document.getElementById('trash');
+		trashElem = document.getElementById('floating-trash-container');
 
 		onUnsavedChange = vi.fn();
 		tierlistManager = new TierlistManager(tierlistDiv, untieredImages, onUnsavedChange);
@@ -71,9 +71,10 @@ describe('dragDrop.js DragDropManager unit tests', () => {
 		dragDropManager.draggedImage = img;
 
 		const dropEvt = new Event('drop', { bubbles: true });
+		Object.defineProperty(dropEvt, 'preventDefault', { value: vi.fn() });
+		Object.defineProperty(dropEvt, 'stopPropagation', { value: vi.fn() });
 		trashElem.dispatchEvent(dropEvt);
 
-		expect(trashElem.src).toContain('assets/trash_bin.png');
 		expect(onUnsavedChange).toHaveBeenCalledWith(true);
 	});
 });

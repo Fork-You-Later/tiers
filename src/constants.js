@@ -3,13 +3,13 @@
 export const MAX_NAME_LEN = 200;
 export const DEFAULT_TIERS = ['S', 'A', 'B', 'C', 'D', 'E', 'F'];
 export const TIER_COLORS = [
-	'#ff6666',
-	'#f0a731',
-	'#f4d95b',
-	'#66ff66',
-	'#58c8f4',
-	'#5b76f4',
-	'#f45bed'
+	'#c0392b', // S — deep crimson
+	'#d35400', // A — burnt amber
+	'#b8860b', // B — dark gold
+	'#1e8449', // C — forest green
+	'#148f9a', // D — deep teal
+	'#5b4cce', // E — indigo
+	'#a83278', // F — magenta-wine
 ];
 
 export const LAYOUT_HORIZONTAL = 0;

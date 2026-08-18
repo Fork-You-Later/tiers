@@ -142,6 +142,14 @@ export class App {
 			this.mysteryMode.wrapNewImage(img);
 		}
 		this.setUnsavedChanges(true);
+		this._updatePoolEmptyHint();
+	}
+
+	_updatePoolEmptyHint() {
+		const hint = document.getElementById('pool-empty-hint');
+		if (!hint) return;
+		const hasImages = this.untieredImages && this.untieredImages.querySelectorAll('img.draggable').length > 0;
+		hint.style.display = hasImages ? 'none' : '';
 	}
 
 	async processIncomingFile(file) {
@@ -302,17 +310,23 @@ export class App {
 	bindToolbarEvents() {
 		const menuToggleBtn = document.getElementById('toggle-tools-menu');
 		const toolbar = document.getElementById('feature-toolbar');
+		const closeMenu = () => {
+			toolbar.classList.remove('popover-open');
+			menuToggleBtn.classList.remove('active');
+			menuToggleBtn.setAttribute('aria-expanded', 'false');
+		};
 		if (menuToggleBtn && toolbar) {
 			menuToggleBtn.addEventListener('click', (e) => {
 				e.stopPropagation();
-				toolbar.classList.toggle('popover-open');
-				menuToggleBtn.classList.toggle('active', toolbar.classList.contains('popover-open'));
+				const isOpen = toolbar.classList.toggle('popover-open');
+				menuToggleBtn.classList.toggle('active', isOpen);
+				menuToggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 			});
 			document.addEventListener('click', (e) => {
-				if (!toolbar.contains(e.target) && !menuToggleBtn.contains(e.target)) {
-					toolbar.classList.remove('popover-open');
-					menuToggleBtn.classList.remove('active');
-				}
+				if (!toolbar.contains(e.target) && !menuToggleBtn.contains(e.target)) closeMenu();
+			});
+			document.addEventListener('keydown', (e) => {
+				if (e.key === 'Escape') closeMenu();
 			});
 		}
 

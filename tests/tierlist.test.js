@@ -38,8 +38,8 @@ describe('tierlist.js TierlistManager unit tests', () => {
 		manager.recomputeHeaderColors();
 
 		const rows = tierlistDiv.querySelectorAll('.row');
-		expect(rows[0].querySelector('.header').style.backgroundColor).toBe('rgb(255, 102, 102)');
-		expect(rows[1].querySelector('.header').style.backgroundColor).toBe('rgb(240, 167, 49)');
+		expect(rows[0].querySelector('.header').style.backgroundColor).toBe('rgb(192, 57, 43)');
+		expect(rows[1].querySelector('.header').style.backgroundColor).toBe('rgb(211, 84, 0)');
 	});
 
 	it('should remove a row and move its images back to untiered pool', () => {

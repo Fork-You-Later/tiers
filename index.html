@@ -5,12 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Offline TierMaker</title>
     <meta name="description" content="Offline, private tierlist maker — no uploads, no accounts. Supports ZIP sticker packs, mystery reveal, Elo battles, and more."/>
-    <link rel="preconnect" href="https://fonts.googleapis.com"/>
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="css/tiers.css"/>
 
-    <!-- Import map: resolve bare specifiers for ES modules served statically -->
     <script type="importmap">
     {
       "imports": {
@@ -23,143 +19,184 @@
   </head>
   <body>
 
-    <!-- ── Header & Navigation ─────────────────────────────────────────── -->
+    <!-- ══════════════ HEADER ══════════════ -->
     <header id="app-header">
       <div class="top-bar">
+
+        <!-- Left: Logo + Title -->
         <div class="top-bar-left">
-          <a href="https://github.com/Fork-You-Later/tiers" class="gh-link" title="View on GitHub" target="_blank" rel="noopener">
+          <a href="https://github.com/Fork-You-Later/tiers" class="gh-link" title="View on GitHub" target="_blank" rel="noopener" aria-label="GitHub repository">
             <svg class="icon-svg" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
             </svg>
           </a>
+
           <div class="title">
             <label class="title-label" for="title-input">My TierList</label>
-            <input type="text" id="title-input"/>
+            <input type="text" id="title-input" maxlength="48"/>
           </div>
         </div>
 
+        <!-- Right: Action Buttons -->
         <div class="top-bar-right">
-          <!-- Quick Add Media Button -->
+
+          <!-- Primary: Add Media (visible always) -->
           <label class="toolbar-btn quick-add-btn" for="load-media-input" title="Add images or ZIP sticker packs">
-            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 5v14M5 12h14"/>
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
             Add Media
           </label>
 
-          <!-- Settings Dropdown Toggle Button -->
-          <button id="toggle-tools-menu" class="toolbar-btn tools-menu-btn" title="Settings Menu">
-            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <!-- Settings Dropdown -->
+          <button id="toggle-tools-menu" class="toolbar-btn tools-menu-btn" title="Settings & Tools" aria-expanded="false">
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="3"/>
-              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
             </svg>
-            Settings ▾
+            Settings
           </button>
 
-          <!-- Toggle Layout Button -->
+          <!-- Layout Toggle -->
           <button id="toggle-layout" class="toolbar-btn icon-only-btn" title="Toggle Horizontal / Vertical Layout">
-            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2.5"/>
               <path d="M9 3v18"/>
             </svg>
           </button>
         </div>
       </div>
 
-      <!-- Feature & Actions Settings Popover Menu -->
-      <div id="feature-toolbar" class="feature-popover">
-        <div class="popover-section-title">📥 Add & Import</div>
+      <!-- ══ Settings Popover ══ -->
+      <div id="feature-toolbar" class="feature-popover" role="menu">
 
-        <!-- Unified Media Input (Images + ZIP) -->
+        <div class="popover-section-title">Import</div>
+
         <label class="toolbar-btn popover-item-btn" for="load-media-input" title="Add images or ZIP sticker pack">
-          ➕ Add Media (Images / ZIP)
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          Add Media (Images / ZIP)
           <input id="load-media-input" type="file" accept="image/*,.zip" multiple/>
         </label>
 
-        <!-- Mobile & Desktop Clipboard Paste Button -->
         <button id="paste-clipboard-btn" class="toolbar-btn popover-item-btn" title="Paste image from clipboard">
-          📋 Paste Image from Clipboard
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M17 4h1a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h1"/><path d="M12 11v6M9 14h6"/></svg>
+          Paste from Clipboard
         </button>
 
-        <label class="toolbar-btn popover-item-btn" for="import-input" title="Import JSON tierlist save file">
-          📂 Import JSON Save
+        <label class="toolbar-btn popover-item-btn" for="import-input" title="Import JSON tierlist save">
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          Import JSON Save
           <input id="import-input" type="file" accept=".json"/>
         </label>
 
-        <div class="popover-section-title">⚙️ Modes & Toggles</div>
+        <div class="popover-sep"></div>
+        <div class="popover-section-title">Modes</div>
 
-        <button id="toggle-mystery" class="toolbar-btn popover-item-btn radio-toggle-btn" role="switch" aria-checked="false" title="Mystery Mode">
-          <span class="toggle-label">🃏 Mystery Mode</span>
+        <button id="toggle-mystery" class="toolbar-btn popover-item-btn radio-toggle-btn" role="switch" aria-checked="false">
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
+          <span class="toggle-label">Mystery Mode</span>
           <span class="toggle-pill"><span class="toggle-thumb"></span></span>
         </button>
 
-        <button id="toggle-loop" class="toolbar-btn popover-item-btn radio-toggle-btn active" role="switch" aria-checked="true" title="Animated WebP / GIF Loop">
-          <span class="toggle-label">▶️ GIF Animations</span>
+        <button id="toggle-loop" class="toolbar-btn popover-item-btn radio-toggle-btn active" role="switch" aria-checked="true">
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span class="toggle-label">GIF Animations</span>
           <span class="toggle-pill"><span class="toggle-thumb"></span></span>
         </button>
 
-        <button id="toggle-budget" class="toolbar-btn popover-item-btn radio-toggle-btn" role="switch" aria-checked="false" title="Budget Tracker Mode">
-          <span class="toggle-label">💰 Budget Tracker</span>
+        <button id="toggle-budget" class="toolbar-btn popover-item-btn radio-toggle-btn" role="switch" aria-checked="false">
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          <span class="toggle-label">Budget Tracker</span>
           <span class="toggle-pill"><span class="toggle-thumb"></span></span>
         </button>
 
-        <div class="popover-section-title">🛠 Tools & Export</div>
+        <div id="budget-display" class="hidden">
+          <span class="budget-label">Budget:</span>
+          <span class="budget-value"></span>
+        </div>
 
-        <button id="toggle-elo" class="toolbar-btn popover-item-btn" title="Start Elo 1v1 battle sorter">
-          ⚔️ Elo 1v1 Battle Sorter
+        <div class="popover-sep"></div>
+        <div class="popover-section-title">Tools &amp; Export</div>
+
+        <button id="toggle-elo" class="toolbar-btn popover-item-btn">
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5zM20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5zM3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14zM14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5zM3 9.5C3 8.67 3.67 8 4.5 8h5c.83 0 1.5.67 1.5 1.5S10.33 11 9.5 11h-5C3.67 11 3 10.33 3 9.5z"/></svg>
+          Elo 1v1 Battle Sorter
         </button>
 
-        <button id="export-png-btn" class="toolbar-btn popover-item-btn" title="Export tierlist as PNG image">
-          📸 Export PNG Image
+        <button id="export-png-btn" class="toolbar-btn popover-item-btn">
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Export as PNG
         </button>
 
-        <button id="export-input" class="toolbar-btn popover-item-btn" title="Export tierlist JSON save file">
-          💾 Save to JSON File
+        <button id="export-input" class="toolbar-btn popover-item-btn">
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Save to JSON File
         </button>
 
-        <button id="reset-list-input" class="toolbar-btn popover-item-btn danger-item" title="Reset all ranked items back to pool">
-          🔄 Reset Ranked Items
+        <button id="reset-list-input" class="toolbar-btn popover-item-btn danger-item">
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+          Reset Ranked Items
         </button>
 
-        <!-- Budget display -->
-        <div id="budget-display" class="hidden"></div>
       </div>
     </header>
 
-    <!-- ── Main Content Area ─────────────────────────────────────────── -->
+    <!-- ══════════════ MAIN ══════════════ -->
     <section class="main-content">
       <div class="tierlist"></div>
+
       <div class="toggleable-container">
         <div class="bottom-container">
-          <section class="images"></section>
+          <section class="images" id="image-pool">
+            <!-- Empty state hint (hidden when images present) -->
+            <div class="pool-empty-hint" id="pool-empty-hint">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2.5"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+                <line x1="12" y1="12" x2="12" y2="18"/>
+                <line x1="9" y1="15" x2="15" y2="15"/>
+              </svg>
+              <p>Drop images or ZIP here<br/>to get started</p>
+              <span>or click <strong>+ Add Media</strong> above</span>
+            </div>
+          </section>
         </div>
-        <p class="hint">💡 Drag images anywhere onto the page · Right-click cards for badges · Click trash to delete</p>
+        <p class="hint">💡 Drag images anywhere · Right-click cards for badges · Drag to trash to delete</p>
       </div>
     </section>
 
-    <!-- ── Bottom Right Floating Trash Bin ───────────────────────────── -->
-    <div id="floating-trash-container" title="Click to manage/delete images, or drag an image here to delete it">
-      <img id="trash" src="assets/trash_bin.png" alt="Trash"/>
+    <!-- ══════════════ FLOATING TRASH ══════════════ -->
+    <div id="floating-trash-container" title="Click to manage/delete images · Drag an image here to delete">
+      <svg id="trash-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+        <path d="M10 11v6M14 11v6"/>
+        <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+      </svg>
+      <span class="trash-float-label">Delete</span>
+      <!-- Legacy img element (hidden via CSS) -->
+      <img id="trash" src="assets/trash_bin.png" alt="" aria-hidden="true"/>
     </div>
 
-    <!-- ── Full-Page Drag & Drop Overlay ─────────────────────────────── -->
-    <div id="full-page-drop-overlay" class="hidden">
+    <!-- ══════════════ FULL-PAGE DROP OVERLAY ══════════════ -->
+    <div id="full-page-drop-overlay" class="hidden" aria-hidden="true">
       <div class="drop-overlay-box">
-        <svg class="drop-overlay-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="drop-overlay-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
         </svg>
-        <h3>Drop Images or ZIP Anywhere</h3>
-        <p>Release to add files directly into your tier pool</p>
+        <h3>Drop Anywhere to Add</h3>
+        <p>Images or ZIP sticker packs — release to load</p>
       </div>
     </div>
 
-    <!-- ── Custom Confirm / Prompt Dialog Modal ──────────────────────── -->
+    <!-- ══════════════ CUSTOM DIALOG MODAL ══════════════ -->
     <div id="custom-dialog-modal" class="hidden" role="dialog" aria-modal="true">
       <div class="dialog-backdrop"></div>
       <div class="dialog-card">
         <h3 class="dialog-title">Confirm Action</h3>
         <p class="dialog-message">Are you sure?</p>
-        <input type="text" class="dialog-input" style="display: none;"/>
+        <input type="text" class="dialog-input" style="display:none;"/>
         <div class="dialog-actions">
           <button class="dialog-btn dialog-cancel-btn">Cancel</button>
           <button class="dialog-btn dialog-confirm-btn dialog-btn-primary">Confirm</button>
@@ -167,7 +204,7 @@
       </div>
     </div>
 
-    <!-- ── Mystery Mode Modal ─────────────────────────────────────── -->
+    <!-- ══════════════ MYSTERY MODE MODAL ══════════════ -->
     <div id="mystery-modal" class="hidden" role="dialog" aria-label="Card Reveal">
       <div class="mystery-backdrop"></div>
       <div class="mystery-content">
@@ -184,14 +221,14 @@
       </div>
     </div>
 
-    <!-- ── Elo Battle Modal ──────────────────────────────────────── -->
+    <!-- ══════════════ ELO BATTLE MODAL ══════════════ -->
     <div id="elo-modal" class="hidden" role="dialog" aria-label="Elo Battle">
       <div class="elo-backdrop"></div>
       <div class="elo-content">
         <div class="elo-header">
           <h2 class="elo-title">⚔️ Elo Battle</h2>
           <span id="elo-progress" class="elo-progress">Match 1 / ?</span>
-          <button id="elo-close" class="elo-close-btn" title="Finish and apply results">✕ Finish</button>
+          <button id="elo-close" class="elo-close-btn">✕ Finish</button>
         </div>
         <div class="elo-arena">
           <div id="elo-left" class="elo-card">
@@ -208,11 +245,11 @@
             <button id="elo-pick-right" class="elo-pick-btn">Pick ▶</button>
           </div>
         </div>
-        <p class="elo-hint">← / → Arrow keys to vote · Esc to finish & apply results</p>
+        <p class="elo-hint">← / → Arrow keys to vote · Esc to finish &amp; apply results</p>
       </div>
     </div>
 
-    <!-- ── Delete Images / Trash Manager Modal ───────────────────────── -->
+    <!-- ══════════════ TRASH / DELETE MODAL ══════════════ -->
     <div id="trash-modal" class="hidden" role="dialog" aria-label="Delete Images">
       <div class="trash-backdrop"></div>
       <div class="trash-content">
@@ -223,8 +260,8 @@
         </div>
         <div class="trash-actions">
           <button id="trash-select-all-btn" class="trash-action-btn">Select All</button>
-          <button id="trash-delete-selected-btn" class="trash-action-btn trash-btn-danger" disabled>🗑️ Delete Selected (0)</button>
-          <button id="trash-delete-all-btn" class="trash-action-btn trash-btn-nuclear">⚠️ Delete ALL Images</button>
+          <button id="trash-delete-selected-btn" class="trash-action-btn trash-btn-danger" disabled>Delete Selected (0)</button>
+          <button id="trash-delete-all-btn" class="trash-action-btn trash-btn-nuclear">⚠️ Delete ALL</button>
         </div>
         <div class="trash-grid"></div>
       </div>
