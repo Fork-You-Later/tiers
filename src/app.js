@@ -122,11 +122,6 @@ export class App {
 		if (!restored) {
 			this.tierlistManager.resizeHeaders();
 		}
-
-		// Ensure all untiered pool cards are wrapped in mystery face-down state at startup
-		if (this.mysteryMode.enabled) {
-			this.mysteryMode.enable();
-		}
 	}
 
 	bindTitleEvents() {
@@ -157,6 +152,16 @@ export class App {
 		}
 		this.setUnsavedChanges(true);
 		this._updatePoolEmptyHint();
+	}
+
+	/**
+	 * After load_tierlist (which bypasses appendImageToPool), re-wrap any
+	 * unwrapped pool images as mystery cards if mystery mode is enabled.
+	 * This call is idempotent — already-wrapped cards are skipped.
+	 */
+	_postLoadMysteryWrap() {
+		if (!this.mysteryMode.enabled) return;
+		this.mysteryMode.enable(); // enable() re-wraps all unwrapped pool images
 	}
 
 	_updatePoolEmptyHint() {
@@ -227,6 +232,7 @@ export class App {
 						(val) => this.setUnsavedChanges(val),
 						restoreBadgesOnImage
 					);
+					this._postLoadMysteryWrap(); // Re-wrap restored pool cards as mystery cards
 				});
 				reader.readAsText(file);
 				evt.target.value = '';
@@ -528,6 +534,7 @@ export class App {
 				(val) => this.setUnsavedChanges(val),
 				restoreBadgesOnImage
 			);
+			this._postLoadMysteryWrap(); // Re-wrap restored pool cards as mystery cards
 			showToast('💾 Auto-restored tierlist from local cache');
 			return true;
 		}
@@ -551,6 +558,7 @@ export class App {
 				(val) => this.setUnsavedChanges(val),
 				restoreBadgesOnImage
 			);
+			this._postLoadMysteryWrap(); // Re-wrap restored pool cards as mystery cards
 		} catch (e) { console.error(e); }
 	}
 }

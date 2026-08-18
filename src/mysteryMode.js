@@ -175,24 +175,28 @@ export class MysteryMode {
 
 		if (revealImg) revealImg.src = img.dataset.animatedSrc || img.src;
 
-		// Immediately show front face for revealed/placed card inspection
+		// For preview: card is already revealed — show image immediately (no swap needed)
 		if (cardFace) {
 			cardFace.classList.remove('mystery-card-face--back');
 			cardFace.classList.add('mystery-card-face--front');
 		}
 
-		if (shockwave) {
-			shockwave.classList.remove('shockwave-burst');
-		}
-
 		modal.classList.remove('hidden');
 		modal.classList.add('mystery-active');
 
+		// Play the short tilt-only animation (no spin-up phase)
 		if (inner) {
-			inner.classList.remove('spinning');
-			inner.classList.remove('tilting');
+			inner.classList.remove('spinning', 'previewing');
 			void inner.offsetWidth;
-			inner.classList.add('tilting');
+			inner.classList.add('previewing');
+		}
+
+		// Shockwave fires at 80% of 0.9s = ~720ms (at slam impact point)
+		await this._delay(720);
+		if (shockwave) {
+			shockwave.classList.remove('shockwave-burst');
+			void shockwave.offsetWidth;
+			shockwave.classList.add('shockwave-burst');
 		}
 
 		await new Promise(resolve => {
@@ -201,7 +205,7 @@ export class MysteryMode {
 
 		modal.classList.remove('mystery-active');
 		modal.classList.add('hidden');
-		if (inner) inner.classList.remove('tilting');
+		if (inner) inner.classList.remove('spinning', 'previewing');
 
 		// Reset for next use
 		if (cardFace) {
@@ -214,8 +218,10 @@ export class MysteryMode {
 		if (!img || img.dataset.hasPreviewListener) return;
 		img.dataset.hasPreviewListener = 'true';
 		img.addEventListener('click', (e) => {
-			// Trigger preview animation on click for cards placed in tierlist or revealed in pool
-			if (this.revealedSet.has(img) || img.closest('.tierlist') || !this.enabled) {
+			// Only trigger preview when mystery mode is enabled
+			// AND the card is already revealed or is in the tier list
+			if (!this.enabled) return;
+			if (this.revealedSet.has(img) || img.closest('.tierlist')) {
 				this.previewCard(img);
 			}
 		});
