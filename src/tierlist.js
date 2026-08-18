@@ -8,7 +8,7 @@ export class TierlistManager {
 		this.untieredImages = untieredImages;
 		this.onUnsavedChange = onUnsavedChange || (() => {});
 		this.allHeaders = [];
-		this.headersOrigMinWidth = 0;
+		this.headersOrigMinWidth = 100;
 		this.curLayout = LAYOUT_HORIZONTAL;
 		this.uniqueId = 0;
 		this.makeAcceptDropFn = null; // injected by DragDrop module
@@ -124,15 +124,18 @@ export class TierlistManager {
 	}
 
 	resizeHeaders() {
-		let max_width = this.headersOrigMinWidth;
+		let max_width = 100;
 		for (let [other_header, _i, label] of this.allHeaders) {
 			if (label) {
-				max_width = Math.max(max_width, label.clientWidth || 0);
+				max_width = Math.max(max_width, label.scrollWidth || label.clientWidth || 100);
 			}
 		}
+		// Cap header width so it doesn't push row items away
+		max_width = Math.min(max_width, 160);
 
 		for (let [other_header, _i2, _l2] of this.allHeaders) {
 			if (other_header) {
+				other_header.style.width = `${max_width}px`;
 				other_header.style.minWidth = `${max_width}px`;
 			}
 		}
@@ -212,10 +215,6 @@ export class TierlistManager {
 			this.makeAcceptDropFn(div);
 		}
 		this.createLabelInput(div, index, name);
-
-		if (this.allHeaders.length === 1 && this.allHeaders[0][0]) {
-			this.headersOrigMinWidth = this.allHeaders[0][0].clientWidth || 0;
-		}
 
 		return div;
 	}

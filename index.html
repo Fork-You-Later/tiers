@@ -23,49 +23,61 @@
   </head>
   <body>
 
-    <!-- ── Title ──────────────────────────────────────────────────── -->
-    <div class="title">
-      <label class="title-label" for="title-input">My TierList</label>
-      <input type="text" id="title-input"/>
-    </div>
+    <!-- ── Header & Toolbar Container ─────────────────────────────────── -->
+    <header id="app-header">
+      <div class="top-bar">
+        <div class="top-bar-left">
+          <a href="https://github.com/Fork-You-Later/tiers" class="gh-link" title="View on GitHub" target="_blank" rel="noopener">
+            <img src="assets/github.svg" class="gh-logo" alt="GitHub"/>
+          </a>
+          <div class="title">
+            <label class="title-label" for="title-input">My TierList</label>
+            <input type="text" id="title-input"/>
+          </div>
+        </div>
+        <div class="top-bar-right">
+          <img id="trash" src="assets/trash_bin.png" title="Delete image (drag here)" alt="Trash"/>
+          <div class="button">
+            <label for="toggle-layout">
+              <img src="assets/toggle_layout.png" title="Toggle Layout" alt="Toggle Layout"/>
+            </label>
+            <input id="toggle-layout" type="button"/>
+          </div>
+        </div>
+      </div>
 
-    <!-- ── GitHub link ────────────────────────────────────────────── -->
-    <a href="https://github.com/Fork-You-Later/tiers" class="gh-link" title="View on GitHub" target="_blank" rel="noopener">
-      <img src="assets/github.svg" class="gh-logo" alt="GitHub"/>
-    </a>
+      <div id="feature-toolbar">
+        <label class="toolbar-btn" for="load-zip-input" title="Load ZIP sticker pack">
+          📦 ZIP
+          <input id="load-zip-input" type="file" accept=".zip"/>
+        </label>
 
-    <!-- ── Feature Toolbar ────────────────────────────────────────── -->
-    <div id="feature-toolbar">
-      <label class="toolbar-btn" for="load-zip-input" title="Load ZIP sticker pack">
-        📦 ZIP
-        <input id="load-zip-input" type="file" accept=".zip"/>
-      </label>
+        <button id="toggle-mystery" class="toolbar-btn" title="Mystery Mode: OFF">
+          🃏 Mystery
+        </button>
 
-      <button id="toggle-mystery" class="toolbar-btn" title="Mystery Mode: OFF">
-        🃏 Mystery
-      </button>
+        <button id="toggle-loop" class="toolbar-btn" title="Animations: ON">
+          ▶️ Anim
+        </button>
 
-      <button id="toggle-loop" class="toolbar-btn" title="Animations: ON">
-        ▶️ Anim
-      </button>
+        <button id="toggle-budget" class="toolbar-btn" title="Budget Mode">
+          💰 Budget
+        </button>
 
-      <button id="toggle-budget" class="toolbar-btn" title="Budget Mode">
-        💰 Budget
-      </button>
+        <button id="toggle-elo" class="toolbar-btn" title="Start Elo 1v1 battles">
+          ⚔️ Elo Sort
+        </button>
 
-      <button id="toggle-elo" class="toolbar-btn" title="Start Elo 1v1 battles">
-        ⚔️ Elo Sort
-      </button>
+        <button id="export-png-btn" class="toolbar-btn" title="Export tierlist as PNG">
+          📸 PNG
+        </button>
 
-      <button id="export-png-btn" class="toolbar-btn" title="Export tierlist as PNG">
-        📸 PNG
-      </button>
+        <!-- Budget display -->
+        <div id="budget-display" class="hidden"></div>
+      </div>
+    </header>
 
-      <!-- Budget display (hidden until budget mode is active) -->
-      <div id="budget-display" class="hidden"></div>
-    </div>
-
-    <!-- ── Main Content ────────────────────────────────────────────── -->
+    <!-- ── Main Content Area ─────────────────────────────────────────── -->
     <section class="main-content">
       <div class="tierlist"></div>
       <div class="toggleable-container">
@@ -101,17 +113,6 @@
         <p class="hint">💡 Drag images to rank them · Right-click a card to add badges · Paste from clipboard</p>
       </div>
     </section>
-
-    <!-- ── Top Right Controls ─────────────────────────────────────── -->
-    <div class="top-container">
-      <img id="trash" src="assets/trash_bin.png" title="Delete image (drag here)" alt="Trash"/>
-      <div class="button">
-        <label for="toggle-layout">
-          <img src="assets/toggle_layout.png" title="Toggle Layout" alt="Toggle Layout"/>
-        </label>
-        <input id="toggle-layout" type="button"/>
-      </div>
-    </div>
 
     <!-- ── Mystery Mode Modal ─────────────────────────────────────── -->
     <div id="mystery-modal" class="hidden" role="dialog" aria-label="Card Reveal">
