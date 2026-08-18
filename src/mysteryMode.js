@@ -91,15 +91,15 @@ export class MysteryMode {
 		const inner = modal.querySelector('.mystery-card-inner');
 		const shockwave = modal.querySelector('#mystery-shockwave');
 
-		// Step 1: multi-stage spinning card reveal animation (2.7s duration)
+		// Step 1: smooth 3D spinning card reveal animation (2.0s duration)
 		if (inner) {
 			inner.classList.remove('flipped');
 			void inner.offsetWidth;
 			inner.classList.add('flipped');
 		}
 
-		// Step 2: shockwave burst right at the 180° card flip impact (~2100ms)
-		await this._delay(2100);
+		// Step 2: shockwave burst right at the 540° card flip impact (~1700ms)
+		await this._delay(1700);
 		if (shockwave) {
 			shockwave.classList.remove('shockwave-burst');
 			void shockwave.offsetWidth;
@@ -153,7 +153,7 @@ export class MysteryMode {
 			inner.classList.add('flipped');
 		}
 
-		await this._delay(2100);
+		await this._delay(1700);
 		if (shockwave) {
 			shockwave.classList.remove('shockwave-burst');
 			void shockwave.offsetWidth;
