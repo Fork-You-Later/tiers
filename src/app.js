@@ -116,6 +116,7 @@ export class App {
 		this.dragDropManager.bindTrashEvents();
 		this.bindToggleLayoutEvents();
 		this.bindBeforeUnload();
+		this.bindViewportScaling();
 
 		// Auto-restore from localStorage or URL parameter
 		const restored = this.tryRestoreCachedOrUrlState();
@@ -502,7 +503,59 @@ export class App {
 		}
 	}
 
-	bindBeforeUnload() {
+		bindViewportScaling() {
+		const updateScaling = () => {
+			const portraitOverlay = document.getElementById('portrait-warning-overlay');
+			const stage = document.getElementById('app-stage');
+			const scaler = document.getElementById('app-stage-scaler');
+			if (!stage || !scaler) return;
+
+			const winW = window.innerWidth;
+			const winH = window.innerHeight;
+			const isPortrait = winH > winW;
+			const isMobileOrSmall = Math.min(winW, winH) <= 900 || ('ontouchstart' in window && winW <= 1024);
+
+			// Check orientation - portrait warning on vertical screens
+			if (portraitOverlay) {
+				if (isPortrait && isMobileOrSmall) {
+					portraitOverlay.classList.remove('hidden');
+					portraitOverlay.setAttribute('aria-hidden', 'false');
+				} else {
+					portraitOverlay.classList.add('hidden');
+					portraitOverlay.setAttribute('aria-hidden', 'true');
+				}
+			}
+
+			// Calculate scale factor based on reference desktop width (1280px)
+			const refW = 1280;
+			let scale = winW < refW ? winW / refW : 1;
+			if (scale < 0.2) scale = 0.2;
+
+			stage.style.transform = scale < 1 ? `scale(${scale})` : '';
+			scaler.style.width = `${refW * scale}px`;
+
+			// Set scaler height to match scaled height of stage content to avoid clipping
+			const unscaledHeight = stage.scrollHeight || stage.offsetHeight;
+			scaler.style.height = `${unscaledHeight * scale}px`;
+
+			window.stageScale = scale;
+		};
+
+		window.addEventListener('resize', updateScaling);
+		window.addEventListener('orientationchange', updateScaling);
+		window.addEventListener('load', updateScaling);
+		updateScaling();
+
+		// Update scaler height if stage dimensions change (e.g., adding images/rows)
+		if (typeof ResizeObserver !== 'undefined') {
+			const stage = document.getElementById('app-stage');
+			if (stage) {
+				new ResizeObserver(updateScaling).observe(stage);
+			}
+		}
+	}
+
+bindBeforeUnload() {
 		window.addEventListener('beforeunload', (evt) => {
 			if (!this.unsavedChanges) return null;
 			var msg = "You have unsaved changes. Leave anyway?";
