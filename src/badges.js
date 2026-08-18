@@ -151,6 +151,7 @@ export function enableBadgesOnImage(imgElem) {
 	}, { passive: true });
 	imgElem.addEventListener('touchend', () => clearTimeout(longPressTimer));
 	imgElem.addEventListener('touchmove', () => clearTimeout(longPressTimer));
+	imgElem.addEventListener('dragstart', () => clearTimeout(longPressTimer));
 }
 
 /**

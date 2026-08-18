@@ -716,6 +716,10 @@ span.item {
 
 /* ── Draggable Image Cards ─── */
 img.draggable {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
   cursor: grab;
   width: 90px;
   height: 90px;
