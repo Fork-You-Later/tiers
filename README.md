@@ -1,22 +1,54 @@
-### Offline Tierlist Maker
+# Offline Tierlist Maker
 
-This is a simple webpage that allows creating custom "[Tierlists](https://knowyourmeme.com/memes/tier-lists)".
+A modular, lightweight, web-based tool for creating custom tierlists entirely offline in your browser.
 
-I was looking for a decent app that would allow me to do that offline without uploading my images to a server or requiring an account, but I couldn't find any, so I made one myself.
+> **Credits**: Originally created by [silverweed](https://github.com/silverweed) ([silverweed/tiers](https://github.com/silverweed/tiers)) under the WTFPL License. Refactored into ES6 modules with automated unit testing.
 
-You can play with the latest version at [silverweed.github.io/tiers](https://silverweed.github.io/tiers), or you can download the repository and open `index.html` in your browser (in both cases, all the logic is run locally on your browser).
+---
 
-#### Features
-- Give a title to your tierlist
-- Import any number of pictures from your local disk
-- Customize the tier names
-- Customize the number of tiers
-- Export your tierlist as JSON and reimport it even from another PC (image data is embedded in the save file). Please consider that this tierlist maker currently does NOT rescale or process the images in any way, so the save file's size will strongly depend on how large are your input images. Avoid uploading too many huge images or the whole app may slow down. In the future I may add thumbnailing capabilities, but for now I'd rather keep it simple. 
-- Import back your tierlist from JSON, either by manually loading it through the Import button or from a remote file. To import a remote tierlist file, use the query parameter `?url=http://url/of/your_tierlist.json` (to avoid issues with special characters in the URL it's advisable to [URL-encode](https://www.urlencoder.io/) it).
+## Features
 
-If you'd like to propose any feature, feel free to open a PR. I probably won't have time to follow issues closely or add much stuff myself though.
+- **Offline & Private**: All image processing and tierlist generation happens locally in your browser. No server uploads or accounts required.
+- **Custom Tier Names & Colors**: Edit names and background colors for any tier.
+- **Dynamic Rows**: Add tiers above/below existing rows, or delete tiers (returning images to the pool).
+- **JSON Import & Export**: Export your tierlists with embedded image data to back them up or transfer between devices.
+- **Clipboard & File Support**: Drag and drop images, select files, or directly paste images from your clipboard.
+- **Horizontal & Vertical Layouts**: Toggle between horizontal and vertical display modes.
+- **Modular ES6 Architecture**: Structured JS modules (`src/`) and CSS (`css/`).
+- **Automated Unit Testing**: Tested with Vitest and JSDOM.
 
-### Using this Tierlist Maker
+---
 
-You are allowed to use this Tierlist Maker however you wish (including YouTube videos, images, memes, embedding it in your website, etc).
+## Direct Mobile Usage (GitHub Pages)
 
+You can use this app directly on your **Android phone or tablet** without needing a laptop or running `npm start`:
+
+1. Go to your repository on GitHub: `https://github.com/Fork-You-Later/tiers`
+2. Go to **Settings** > **Pages**.
+3. Under **Build and deployment** > **Source**, select `Deploy from a branch`.
+4. Under **Branch**, select `main` and `/ (root)`, then click **Save**.
+5. After a minute, GitHub will publish your site live at:
+   **`https://fork-you-later.github.io/tiers/`**
+
+Open that URL in Chrome or Firefox on your Android mobile device! You can also select **"Add to Home screen"** in Android Chrome to launch it like a native app.
+
+---
+
+## Local Development & Testing
+
+### Running Locally
+```bash
+npm start
+```
+Open `http://localhost:3000` in your browser.
+
+### Running Unit Tests
+```bash
+npm test
+```
+
+---
+
+## License & Attribution
+
+Original work Copyright (C) 2022 silverweed. Distributed under the terms of the DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE (WTFPL).

@@ -1,3 +1,5 @@
 img/
 images.js
 *.swp
+node_modules/
+Downloads/

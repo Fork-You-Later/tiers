@@ -253,7 +253,7 @@ img.draggable.dragged, .button:active {
 .vl {
 	border-left: 6px solid red;
 	margin: 0;
-  	height: 100px;
-  	position: absolute;
-  	top: 0;
+	height: 100px;
+	position: absolute;
+	top: 0;
 }

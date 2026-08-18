@@ -1,0 +1,16 @@
+{
+  "name": "tiers",
+  "version": "1.0.0",
+  "description": "Offline Tierlist Maker",
+  "type": "module",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx serve .",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "jsdom": "^26.0.0",
+    "vitest": "^3.0.5"
+  }
+}
