@@ -39,6 +39,17 @@ body {
   flex-direction: column;
 }
 
+/* Strictly hide all native file inputs inside icon buttons */
+input[type="file"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+}
+
 /* ── Header & Navigation ─────────────────────────────────────────── */
 #app-header {
   display: flex;
@@ -57,7 +68,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 8px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  position: relative;
 }
 
 .top-bar-left {
@@ -112,13 +123,31 @@ body {
 
 .title input:focus { box-shadow: 0 0 0 3px rgba(233,69,96,0.3); }
 
-/* ── Feature Toolbar ─────────────────────────────────────────────── */
-#feature-toolbar {
-  display: flex;
-  align-items: center;
+/* ── Tools Popover Menu & Feature Toolbar ────────────────────────── */
+.tools-menu-btn {
+  font-weight: 600 !important;
+  background: var(--bg-2) !important;
+}
+
+#feature-toolbar.feature-popover {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px;
   gap: 8px;
-  padding: 8px 16px;
   flex-wrap: wrap;
+  box-shadow: var(--shadow);
+  z-index: 1001;
+  max-width: 420px;
+  animation: fadeInScale 150ms ease;
+}
+
+#feature-toolbar.feature-popover.popover-open {
+  display: flex;
 }
 
 .toolbar-btn {
@@ -139,7 +168,7 @@ body {
   user-select: none;
 }
 .toolbar-btn:hover {
-  background: var(--surface-2);
+  background: var(--surface);
   border-color: var(--accent);
   box-shadow: 0 0 10px rgba(233,69,96,0.2);
 }
@@ -151,16 +180,15 @@ body {
   box-shadow: var(--glow);
 }
 
-#feature-toolbar input[type="file"] { display: none; }
-
 /* Budget Display */
 #budget-display {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-left: auto;
-  padding: 5px 14px;
-  background: var(--bg-2);
+  width: 100%;
+  margin-top: 4px;
+  padding: 6px 14px;
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 13px;
@@ -345,10 +373,12 @@ span.item {
   justify-content: center;
   background: var(--surface);
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
   transition: background var(--transition), border-color var(--transition);
 }
 .button:hover { background: var(--surface-2); border-color: var(--accent); }
-.button img { width: 28px; height: 28px; object-fit: contain; user-select: none; }
+.button img { width: 28px; height: 28px; object-fit: contain; user-select: none; pointer-events: none; }
 .button label { cursor: pointer; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
 
 .images {
@@ -421,16 +451,38 @@ img.draggable.dragged {
 }
 .row-buttons input[type=button]:hover { background: var(--accent); border-color: var(--accent); }
 
-/* ── Trash ───────────────────────────────────────────────────────── */
+/* ── Bottom Right Floating Trash Container ────────────────────────── */
+#floating-trash-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 10000;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow);
+  transition: transform var(--transition), border-color var(--transition), background var(--transition);
+}
+#floating-trash-container:hover {
+  transform: scale(1.1);
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+
 #trash {
-  opacity: 0.5;
+  opacity: 0.6;
   transition: opacity var(--transition), filter var(--transition), transform var(--transition);
-  height: 36px;
-  width: 36px;
+  height: 32px;
+  width: 32px;
   object-fit: contain;
   cursor: pointer;
 }
-#trash:hover { opacity: 1; filter: drop-shadow(0 0 8px var(--accent)); transform: scale(1.1); }
+#floating-trash-container:hover #trash { opacity: 1; filter: drop-shadow(0 0 8px var(--accent)); }
 
 /* ── Hint Text ───────────────────────────────────────────────────── */
 .hint {
@@ -846,4 +898,6 @@ img.draggable.dragged {
   .elo-card img { width: 90px; height: 90px; }
   .mystery-card-inner { width: 120px; height: 120px; }
   .mystery-question { font-size: 54px; }
+  #floating-trash-container { width: 50px; height: 50px; bottom: 16px; right: 16px; }
+  #trash { width: 26px; height: 26px; }
 }

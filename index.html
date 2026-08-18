@@ -23,7 +23,7 @@
   </head>
   <body>
 
-    <!-- ── Header & Toolbar Container ─────────────────────────────────── -->
+    <!-- ── Header & Navigation ─────────────────────────────────────────── -->
     <header id="app-header">
       <div class="top-bar">
         <div class="top-bar-left">
@@ -36,17 +36,23 @@
           </div>
         </div>
         <div class="top-bar-right">
-          <img id="trash" src="assets/trash_bin.png" title="Delete image (drag here)" alt="Trash"/>
-          <div class="button">
+          <!-- Tools Menu Toggle Button -->
+          <button id="toggle-tools-menu" class="toolbar-btn tools-menu-btn" title="Toggle Feature Tools Menu">
+            ⚙️ Tools ▾
+          </button>
+
+          <!-- Toggle Layout Button -->
+          <div class="button layout-btn-box" title="Toggle Horizontal / Vertical Layout">
             <label for="toggle-layout">
-              <img src="assets/toggle_layout.png" title="Toggle Layout" alt="Toggle Layout"/>
+              <img src="assets/toggle_layout.png" alt="Toggle Layout"/>
             </label>
             <input id="toggle-layout" type="button"/>
           </div>
         </div>
       </div>
 
-      <div id="feature-toolbar">
+      <!-- Feature Toolbar (Popover Menu) -->
+      <div id="feature-toolbar" class="feature-popover">
         <label class="toolbar-btn" for="load-zip-input" title="Load ZIP sticker pack">
           📦 ZIP
           <input id="load-zip-input" type="file" accept=".zip"/>
@@ -83,27 +89,27 @@
       <div class="toggleable-container">
         <div class="bottom-container">
           <div class="buttons-container">
-            <div class="button">
+            <div class="button" title="Add images">
               <label for="load-img-input">
-                <img src="assets/plus.png" title="Add images" alt="Add"/>
+                <img src="assets/plus.png" alt="Add"/>
               </label>
               <input id="load-img-input" type="file" accept="image/*" multiple/>
             </div>
-            <div class="button">
+            <div class="button" title="Reset list">
               <label for="reset-list-input">
-                <img src="assets/reset.png" title="Reset list" alt="Reset">
+                <img src="assets/reset.png" alt="Reset">
               </label>
               <input id="reset-list-input" type="button"/>
             </div>
-            <div class="button">
+            <div class="button" title="Export JSON">
               <label for="export-input">
-                <img src="assets/export.png" title="Export JSON" alt="Export">
+                <img src="assets/export.png" alt="Export">
               </label>
               <input id="export-input" type="button"/>
             </div>
-            <div class="button">
+            <div class="button" title="Import JSON">
               <label for="import-input">
-                <img src="assets/import.png" title="Import JSON" alt="Import"/>
+                <img src="assets/import.png" alt="Import"/>
               </label>
               <input id="import-input" type="file" accept=".json"/>
             </div>
@@ -113,6 +119,11 @@
         <p class="hint">💡 Drag images to rank them · Right-click a card to add badges · Paste from clipboard</p>
       </div>
     </section>
+
+    <!-- ── Bottom Right Floating Trash Bin ───────────────────────────── -->
+    <div id="floating-trash-container" title="Drag image here to delete">
+      <img id="trash" src="assets/trash_bin.png" alt="Trash"/>
+    </div>
 
     <!-- ── Mystery Mode Modal ─────────────────────────────────────── -->
     <div id="mystery-modal" class="hidden" role="dialog" aria-label="Card Reveal">

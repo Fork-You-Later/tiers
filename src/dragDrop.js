@@ -1,6 +1,7 @@
 'use strict';
 
 import { get_item_index } from './utils.js';
+import { untrackImage } from './deduplication.js';
 
 export class DragDropManager {
 	constructor(tierlistManager, onUnsavedChange) {
@@ -33,32 +34,27 @@ export class DragDropManager {
 
 	setItemPlacementMarkerLocation(elem, is_hovering_row) {
 		if (!elem) return;
-		var h_offset = elem.offsetLeft.toString();
-		let hovering_empty_bottom_container = false;
+		const rect = elem.getBoundingClientRect();
+		const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+		const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
 
-		if (elem.parentNode && elem.parentNode.classList.contains("bottom-container")) {
-			hovering_empty_bottom_container = true;
-		}
+		let left = rect.left + scrollLeft;
+		let top = rect.top + scrollTop;
 
-		h_offset -= 8;
-
-		if (is_hovering_row && !hovering_empty_bottom_container) {
-			let position_info;
+		if (is_hovering_row) {
 			let row_header = elem.getElementsByClassName ? elem.getElementsByClassName("header") : null;
 			row_header = row_header && row_header.length > 0 ? row_header[0] : undefined;
 			if (row_header !== undefined) {
-				position_info = row_header.getBoundingClientRect();
-			} else {
-				position_info = elem.getBoundingClientRect();
+				const headerRect = row_header.getBoundingClientRect();
+				left = headerRect.right + scrollLeft;
 			}
-
-			h_offset = position_info.right - 8;
-			this.placementMarkerDiv.style.marginLeft = h_offset + "px";
-		} else {
-			this.placementMarkerDiv.style.marginLeft = h_offset + "px";
 		}
 
-		this.placementMarkerDiv.style.top = `${elem.offsetTop}px`;
+		this.placementMarkerDiv.style.position = 'absolute';
+		this.placementMarkerDiv.style.left = `${left}px`;
+		this.placementMarkerDiv.style.top = `${top}px`;
+		this.placementMarkerDiv.style.height = `${rect.height || 100}px`;
+		this.placementMarkerDiv.style.marginLeft = '0px';
 	}
 
 	preCalcRowItemPlacementMarkerLocation(image_node_list, drag_enter_img) {
@@ -174,6 +170,7 @@ export class DragDropManager {
 			evt.preventDefault();
 			evt.target.src = 'assets/trash_bin.png';
 			if (this.draggedImage) {
+				untrackImage(this.draggedImage);
 				let dragged_image_parent = this.draggedImage.parentNode;
 				if (dragged_image_parent && dragged_image_parent.tagName.toUpperCase() === 'SPAN' &&
 					dragged_image_parent.classList.contains('item')) {

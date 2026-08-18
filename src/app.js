@@ -2,16 +2,17 @@
 
 import { DEFAULT_TIERS, LAYOUT_HORIZONTAL, LAYOUT_VERTICAL } from './constants.js';
 import { is_url, showToast } from './utils.js';
-import { save_tierlist, load_tierlist } from './serializer.js';
+import { serialize_tierlist, save_tierlist, load_tierlist } from './serializer.js';
 import { TierlistManager } from './tierlist.js';
 import { DragDropManager } from './dragDrop.js';
 import { loadZip } from './zipLoader.js';
-import { isDuplicate, clearHashes } from './deduplication.js';
+import { isDuplicate, clearHashes, computeHash, registerImageHash } from './deduplication.js';
 import { applyLoopToNewImage, applyGlobalLoopSetting, isLoopEnabled } from './animationControl.js';
 import { enableBadgesOnImage, getBadgesForImage, restoreBadgesOnImage } from './badges.js';
 import { BudgetMode } from './budgetMode.js';
 import { MysteryMode } from './mysteryMode.js';
 import { EloSorter } from './eloSorter.js';
+import { saveToStorage, loadFromStorage, clearStorage } from './storage.js';
 
 export class App {
 	constructor() {
@@ -23,14 +24,32 @@ export class App {
 		this.dragDropManager = null;
 		this.budgetMode = new BudgetMode();
 		this.mysteryMode = new MysteryMode((img) => {
-			// After a mystery card reveal, enable badges
 			enableBadgesOnImage(img);
 		});
 		this.eloSorter = null;
+		this._autoSaveTimer = null;
 	}
 
 	setUnsavedChanges(val) {
 		this.unsavedChanges = val;
+		if (val) {
+			this.triggerAutoSave();
+		}
+	}
+
+	triggerAutoSave() {
+		if (this._autoSaveTimer) clearTimeout(this._autoSaveTimer);
+		this._autoSaveTimer = setTimeout(() => {
+			if (this.tierlistDiv && this.untieredImages && this.titleLabel) {
+				const data = serialize_tierlist(
+					this.tierlistDiv,
+					this.untieredImages,
+					this.titleLabel,
+					getBadgesForImage
+				);
+				saveToStorage(data);
+			}
+		}, 600);
 	}
 
 	init() {
@@ -80,7 +99,11 @@ export class App {
 		this.bindToggleLayoutEvents();
 		this.bindBeforeUnload();
 
-		void this.tryLoadTierlistJson();
+		// Auto-restore from localStorage or URL parameter
+		const restored = this.tryRestoreCachedOrUrlState();
+		if (!restored) {
+			this.tierlistManager.resizeHeaders();
+		}
 	}
 
 	bindTitleEvents() {
@@ -92,25 +115,27 @@ export class App {
 	}
 
 	// ── Image creation with all feature hooks ──────────────────────────────
-	createImage(src) {
+	createImage(src, hash = null) {
 		const img = this.dragDropManager.createImgWithSrc(src);
+		if (hash) {
+			registerImageHash(img, hash);
+			img.dataset.imageHash = hash;
+		}
 		applyLoopToNewImage(img);
 		enableBadgesOnImage(img);
-
-		// Deduplication: tag new images for reference (async hash in zip flow)
-		if (this.mysteryMode.enabled) {
-			this.mysteryMode.wrapNewImage(img);
-		}
 		return img;
 	}
 
-	async addImageBlobToPool(blob) {
-		if (await isDuplicate(blob)) return null;
-		const url = URL.createObjectURL(blob);
-		const img = this.createImage(url);
+	/**
+	 * Appends an image to the untiered pool and applies mystery mode wrapping if active.
+	 */
+	appendImageToPool(img) {
+		if (!this.untieredImages || !img) return;
 		this.untieredImages.appendChild(img);
+		if (this.mysteryMode.enabled) {
+			this.mysteryMode.wrapNewImage(img);
+		}
 		this.setUnsavedChanges(true);
-		return img;
 	}
 
 	// ── File input (images + ZIP) ──────────────────────────────────────────
@@ -124,11 +149,11 @@ export class App {
 					if (file.type.startsWith('image/')) {
 						const isDupe = await isDuplicate(file);
 						if (isDupe) { dupes++; continue; }
+						const hash = await computeHash(file);
 						const reader = new FileReader();
 						reader.addEventListener('load', (load_evt) => {
-							const img = this.createImage(load_evt.target.result);
-							this.untieredImages.appendChild(img);
-							this.setUnsavedChanges(true);
+							const img = this.createImage(load_evt.target.result, hash);
+							this.appendImageToPool(img);
 						});
 						reader.readAsDataURL(file);
 						added++;
@@ -146,11 +171,11 @@ export class App {
 				if (!file) return;
 				showToast('📦 Extracting ZIP…');
 				try {
-					await loadZip(file, (blob) => {
+					await loadZip(file, async (blob) => {
+						const hash = await computeHash(blob);
 						const url = URL.createObjectURL(blob);
-						const img = this.createImage(url);
-						this.untieredImages.appendChild(img);
-						this.setUnsavedChanges(true);
+						const img = this.createImage(url, hash);
+						this.appendImageToPool(img);
 					});
 				} catch (e) {
 					showToast('❌ Failed to extract ZIP: ' + e.message);
@@ -200,11 +225,11 @@ export class App {
 					let blob = item.getAsFile();
 					const isDupe = await isDuplicate(blob);
 					if (isDupe) { showToast('📋 Duplicate image skipped'); continue; }
+					const hash = await computeHash(blob);
 					let reader = new FileReader();
 					reader.onload = (load_evt) => {
-						let img = this.createImage(load_evt.target.result);
-						this.untieredImages.appendChild(img);
-						this.setUnsavedChanges(true);
+						let img = this.createImage(load_evt.target.result, hash);
+						this.appendImageToPool(img);
 					};
 					reader.readAsDataURL(blob);
 				}
@@ -212,7 +237,7 @@ export class App {
 		};
 	}
 
-	// ── Toolbar & Feature Buttons ──────────────────────────────────────────
+	// ── Toolbar & Buttons ──────────────────────────────────────────────────
 	bindButtonEvents() {
 		const resetBtn = document.getElementById('reset-list-input');
 		if (resetBtn) {
@@ -243,6 +268,23 @@ export class App {
 	}
 
 	bindToolbarEvents() {
+		// Toggle Popover Menu for Feature Toolbar
+		const menuToggleBtn = document.getElementById('toggle-tools-menu');
+		const toolbar = document.getElementById('feature-toolbar');
+		if (menuToggleBtn && toolbar) {
+			menuToggleBtn.addEventListener('click', (e) => {
+				e.stopPropagation();
+				toolbar.classList.toggle('popover-open');
+				menuToggleBtn.classList.toggle('active', toolbar.classList.contains('popover-open'));
+			});
+			document.addEventListener('click', (e) => {
+				if (!toolbar.contains(e.target) && !menuToggleBtn.contains(e.target)) {
+					toolbar.classList.remove('popover-open');
+					menuToggleBtn.classList.remove('active');
+				}
+			});
+		}
+
 		// Mystery Mode toggle
 		const mysteryToggle = document.getElementById('toggle-mystery');
 		if (mysteryToggle) {
@@ -303,18 +345,21 @@ export class App {
 			});
 		}
 
-		// PNG Export
+		// PNG Export with skipFonts to avoid cross-origin CSS exceptions
 		const pngBtn = document.getElementById('export-png-btn');
 		if (pngBtn) {
 			pngBtn.addEventListener('click', async () => {
 				try {
 					showToast('📸 Capturing tierlist…');
 					const { toPng } = await import('html-to-image');
-					// Temporarily hide control buttons for clean export
 					const buttons = this.tierlistDiv.querySelectorAll('.row-buttons');
 					buttons.forEach(b => b.style.visibility = 'hidden');
 
-					const dataUrl = await toPng(this.tierlistDiv, { cacheBust: true, pixelRatio: 2 });
+					const dataUrl = await toPng(this.tierlistDiv, {
+						cacheBust: true,
+						pixelRatio: 2,
+						skipFonts: true // Prevents cross-origin CSSSecurityError / CORS font errors
+					});
 
 					buttons.forEach(b => b.style.visibility = '');
 
@@ -350,28 +395,54 @@ export class App {
 		});
 	}
 
-	async tryLoadTierlistJson() {
-		if (typeof window === 'undefined' || !window.location) return;
+	tryRestoreCachedOrUrlState() {
+		if (typeof window === 'undefined' || !window.location) return false;
 		const load_from_url = new URLSearchParams(window.location.search).get('url');
 		if (load_from_url !== null && is_url(load_from_url)) {
-			try {
-				let result = await fetch(load_from_url);
-				result = await result.json();
-				this.tierlistManager.hardResetList();
-				clearHashes();
-				load_tierlist(
-					result,
-					this.titleLabel,
-					(idx, name) => this.tierlistManager.addRow(idx, name),
-					(src) => this.createImage(src),
-					() => this.tierlistManager.resizeHeaders(),
-					(idx) => this.tierlistManager.recomputeHeaderColors(idx),
-					this.untieredImages,
-					(val) => this.setUnsavedChanges(val),
-					restoreBadgesOnImage
-				);
-			} catch (e) { console.error(e); }
+			void this.tryLoadTierlistJson(load_from_url);
+			return true;
 		}
+
+		// Otherwise check localStorage cache
+		const cached = loadFromStorage();
+		if (cached && cached.rows && cached.rows.length > 0) {
+			this.tierlistManager.hardResetList();
+			clearHashes();
+			load_tierlist(
+				cached,
+				this.titleLabel,
+				(idx, name) => this.tierlistManager.addRow(idx, name),
+				(src) => this.createImage(src),
+				() => this.tierlistManager.resizeHeaders(),
+				(idx) => this.tierlistManager.recomputeHeaderColors(idx),
+				this.untieredImages,
+				(val) => this.setUnsavedChanges(val),
+				restoreBadgesOnImage
+			);
+			showToast('💾 Auto-restored tierlist from local cache');
+			return true;
+		}
+		return false;
+	}
+
+	async tryLoadTierlistJson(url) {
+		try {
+			let result = await fetch(url);
+			result = await result.json();
+			this.tierlistManager.hardResetList();
+			clearHashes();
+			load_tierlist(
+				result,
+				this.titleLabel,
+				(idx, name) => this.tierlistManager.addRow(idx, name),
+				(src) => this.createImage(src),
+				() => this.tierlistManager.resizeHeaders(),
+				(idx) => this.tierlistManager.recomputeHeaderColors(idx),
+				this.untieredImages,
+				(val) => this.setUnsavedChanges(val),
+				restoreBadgesOnImage
+			);
+		} catch (e) { console.error(e); }
 	}
 }
 

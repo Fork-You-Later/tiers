@@ -25,14 +25,16 @@ export class MysteryMode {
 
 	disable() {
 		this.enabled = false;
-		// Unwrap all remaining face-down cards, reveal them
+		// Unwrap all remaining face-down cards and make them visible
 		document.querySelectorAll('.mystery-wrapper').forEach(wrapper => {
 			const img = wrapper.querySelector('img.draggable');
 			if (img) {
 				this.revealedSet.add(img);
 				img.draggable = true;
-				// Replace wrapper with original img
-				wrapper.parentNode.insertBefore(img, wrapper);
+				img.style.display = ''; // Restore visibility
+				if (wrapper.parentNode) {
+					wrapper.parentNode.insertBefore(img, wrapper);
+				}
 				wrapper.remove();
 			}
 		});
@@ -49,6 +51,7 @@ export class MysteryMode {
 	_wrapAsMysteryCard(img) {
 		if (!img || this.revealedSet.has(img)) return;
 		if (img.closest('.mystery-wrapper')) return;
+		if (!img.parentNode) return; // Guard against detached elements
 
 		// Disable dragging while unrevealed
 		img.draggable = false;
@@ -67,7 +70,9 @@ export class MysteryMode {
 		});
 
 		wrapper.appendChild(faceDown);
-		img.parentNode.insertBefore(wrapper, img);
+		if (img.parentNode) {
+			img.parentNode.insertBefore(wrapper, img);
+		}
 		wrapper.appendChild(img);
 		img.style.display = 'none';
 	}
@@ -89,7 +94,6 @@ export class MysteryMode {
 		// Step 1: flip animation
 		if (inner) {
 			inner.classList.remove('flipped');
-			// Force reflow
 			void inner.offsetWidth;
 			inner.classList.add('flipped');
 		}
@@ -121,8 +125,10 @@ export class MysteryMode {
 		if (faceDown) faceDown.remove();
 
 		// Unwrap: move img out of wrapper
-		wrapper.parentNode.insertBefore(img, wrapper);
-		wrapper.remove();
+		if (wrapper.parentNode) {
+			wrapper.parentNode.insertBefore(img, wrapper);
+			wrapper.remove();
+		}
 
 		this.onRevealComplete(img);
 	}
