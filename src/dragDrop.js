@@ -29,6 +29,9 @@ export class DragDropManager {
 			this.draggedImage.classList.add("dragged");
 			this.oldItemIndex = get_item_index(this.draggedImage, this.tierlistManager ? this.tierlistManager.tierlistDiv : null);
 		});
+		img.addEventListener('contextmenu', (evt) => {
+			evt.preventDefault();
+		});
 		return img;
 	}
 
