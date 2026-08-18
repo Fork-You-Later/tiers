@@ -1435,6 +1435,29 @@ img.draggable.dragged {
   }
 }
 
+.mystery-badges-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 400px;
+  animation: fadeInUp 0.5s var(--ease) 1.2s both;
+  z-index: 10;
+}
+
+.mystery-badges-container .badge-menu-item {
+  background: var(--surface-2);
+  padding: 6px 12px;
+}
+
+.mystery-badges-container .badge-menu-item:hover {
+  background: var(--surface-3);
+}
+
+.mystery-badges-container .badge-menu-item.active {
+  background: var(--accent-dim);
+}
+
 .mystery-hint {
   color: var(--text-secondary);
   font-size: 14px;

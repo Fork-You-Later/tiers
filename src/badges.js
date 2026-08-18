@@ -140,20 +140,27 @@ export function enableBadgesOnImage(imgElem) {
 		e.preventDefault();
 		showContextMenu(e.clientX, e.clientY, imgElem);
 	});
+}
 
-	// Mobile touch device tracking
-	let isTouchDevice = false;
-	imgElem.addEventListener('touchstart', () => {
-		isTouchDevice = true;
-	}, { passive: true });
+/**
+ * Renders an inline UI for badge selection (for mobile/mystery mode).
+ */
+export function showBadgeUIForCard(imgElem, container) {
+	if (!container) return;
+	container.innerHTML = '';
+	const currentBadges = cardBadges.get(imgElem) || new Set();
 
-	// On mobile, show badges context menu on simple click instead
-	imgElem.addEventListener('click', (e) => {
-		if (isTouchDevice) {
+	BADGES.forEach(badge => {
+		const btn = document.createElement('button');
+		btn.className = 'badge-menu-item' + (currentBadges.has(badge.id) ? ' active' : '');
+		btn.innerHTML = `<span class="badge-emoji">${badge.emoji}</span> ${badge.label}`;
+		btn.addEventListener('click', (e) => {
 			e.preventDefault();
 			e.stopPropagation();
-			showContextMenu(e.clientX, e.clientY, imgElem);
-		}
+			toggleBadge(imgElem, badge.id);
+			btn.classList.toggle('active', cardBadges.get(imgElem).has(badge.id));
+		});
+		container.appendChild(btn);
 	});
 }
 
