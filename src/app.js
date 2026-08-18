@@ -122,6 +122,11 @@ export class App {
 		if (!restored) {
 			this.tierlistManager.resizeHeaders();
 		}
+
+		// Ensure all untiered pool cards are wrapped in mystery face-down state at startup
+		if (this.mysteryMode.enabled) {
+			this.mysteryMode.enable();
+		}
 	}
 
 	bindTitleEvents() {

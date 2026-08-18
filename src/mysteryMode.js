@@ -175,10 +175,14 @@ export class MysteryMode {
 
 		if (revealImg) revealImg.src = img.dataset.animatedSrc || img.src;
 
-		// Reset to back state
+		// Immediately show front face for revealed/placed card inspection
 		if (cardFace) {
-			cardFace.classList.remove('mystery-card-face--front');
-			cardFace.classList.add('mystery-card-face--back');
+			cardFace.classList.remove('mystery-card-face--back');
+			cardFace.classList.add('mystery-card-face--front');
+		}
+
+		if (shockwave) {
+			shockwave.classList.remove('shockwave-burst');
 		}
 
 		modal.classList.remove('hidden');
@@ -186,23 +190,9 @@ export class MysteryMode {
 
 		if (inner) {
 			inner.classList.remove('spinning');
+			inner.classList.remove('tilting');
 			void inner.offsetWidth;
-			inner.classList.add('spinning');
-		}
-
-		// Swap content at 45% of animation (~990ms)
-		await this._delay(990);
-		if (cardFace) {
-			cardFace.classList.remove('mystery-card-face--back');
-			cardFace.classList.add('mystery-card-face--front');
-		}
-
-		// Shockwave at impact (~1870ms)
-		await this._delay(880);
-		if (shockwave) {
-			shockwave.classList.remove('shockwave-burst');
-			void shockwave.offsetWidth;
-			shockwave.classList.add('shockwave-burst');
+			inner.classList.add('tilting');
 		}
 
 		await new Promise(resolve => {
@@ -211,7 +201,7 @@ export class MysteryMode {
 
 		modal.classList.remove('mystery-active');
 		modal.classList.add('hidden');
-		if (inner) inner.classList.remove('spinning');
+		if (inner) inner.classList.remove('tilting');
 
 		// Reset for next use
 		if (cardFace) {
