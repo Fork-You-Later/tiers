@@ -91,15 +91,15 @@ export class MysteryMode {
 		const inner = modal.querySelector('.mystery-card-inner');
 		const shockwave = modal.querySelector('#mystery-shockwave');
 
-		// Step 1: flip animation
+		// Step 1: flip animation (1.5s duration)
 		if (inner) {
 			inner.classList.remove('flipped');
 			void inner.offsetWidth;
 			inner.classList.add('flipped');
 		}
 
-		// Step 2: shockwave after flip starts
-		await this._delay(350);
+		// Step 2: shockwave burst right at the card flip impact (~750ms)
+		await this._delay(750);
 		if (shockwave) {
 			shockwave.classList.remove('shockwave-burst');
 			void shockwave.offsetWidth;
@@ -153,7 +153,7 @@ export class MysteryMode {
 			inner.classList.add('flipped');
 		}
 
-		await this._delay(300);
+		await this._delay(750);
 		if (shockwave) {
 			shockwave.classList.remove('shockwave-burst');
 			void shockwave.offsetWidth;
