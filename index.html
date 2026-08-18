@@ -1,63 +1,162 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
-    <meta charset='utf-8' lang='en'/>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Offline TierMaker</title>
-    <link rel='stylesheet' href='css/tiers.css'/>
+    <meta name="description" content="Offline, private tierlist maker — no uploads, no accounts. Supports ZIP sticker packs, mystery reveal, Elo battles, and more."/>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="css/tiers.css"/>
+
+    <!-- Import map: resolve bare specifiers for ES modules served statically -->
+    <script type="importmap">
+    {
+      "imports": {
+        "jszip": "https://esm.sh/jszip@3.10.1",
+        "html-to-image": "https://esm.sh/html-to-image@1.11.11"
+      }
+    }
+    </script>
     <script type="module" src="src/app.js"></script>
   </head>
   <body>
-    <div class='title'>
-        <label class='title-label' for='title-input'>My TierList</label>
-        <input type='text' id='title-input' />
+
+    <!-- ── Title ──────────────────────────────────────────────────── -->
+    <div class="title">
+      <label class="title-label" for="title-input">My TierList</label>
+      <input type="text" id="title-input"/>
     </div>
-    <a href='https://github.com/silverweed/tiers' class='gh-link'>
-      <img src="assets/github.svg" class="gh-logo" title="GitHub"/>
+
+    <!-- ── GitHub link ────────────────────────────────────────────── -->
+    <a href="https://github.com/Fork-You-Later/tiers" class="gh-link" title="View on GitHub" target="_blank" rel="noopener">
+      <img src="assets/github.svg" class="gh-logo" alt="GitHub"/>
     </a>
-    <section class='main-content'>
-        <div class='tierlist'>
-        </div>
-        <div class='toggleable-container'>
-            <div class='bottom-container'>
-                <div class='buttons-container'>
-                    <div class='button'>
-                        <label for='load-img-input'>
-                            <img src='assets/plus.png' title='Add images'/>
-                        </label>
-                        <input id='load-img-input' type='file' accept='image/*' multiple/>
-                    </div>
-                    <div class='button'>
-                        <label for='reset-list-input'>
-                            <img src='assets/reset.png' title='Reset list'>
-                        </label>
-                        <input id='reset-list-input' type='button' />
-                    </div>
-                    <div class='button'>
-                        <label for='export-input'>
-                            <img src='assets/export.png' title='Export'>
-                        </label>
-                        <input id='export-input' type='button' />
-                    </div>
-                    <div class='button'>
-                        <label for='import-input'>
-                            <img src='assets/import.png' title='Import'/>
-                        </label>
-                        <input id='import-input' type='file' accept='.json' multiple/>
-                    </div>
-                </div>
-                <section class='images'></section>
-            </div>
-            <p class='hint'>Hint: you can paste an image into this page to have it show up in the image list.</p>
-        </div>
-    </section>
-    <div class="top-container">
-        <img id='trash' src='assets/trash_bin.png' title='Delete image (drag it over here)'></img>
-        <div class='button'>
-            <label for='toggle-layout'>
-                <img src='assets/toggle_layout.png' title='Toggle Layout'/>
-            </label>
-            <input id='toggle-layout' type='button'/>
-        </div>
+
+    <!-- ── Feature Toolbar ────────────────────────────────────────── -->
+    <div id="feature-toolbar">
+      <label class="toolbar-btn" for="load-zip-input" title="Load ZIP sticker pack">
+        📦 ZIP
+        <input id="load-zip-input" type="file" accept=".zip"/>
+      </label>
+
+      <button id="toggle-mystery" class="toolbar-btn" title="Mystery Mode: OFF">
+        🃏 Mystery
+      </button>
+
+      <button id="toggle-loop" class="toolbar-btn" title="Animations: ON">
+        ▶️ Anim
+      </button>
+
+      <button id="toggle-budget" class="toolbar-btn" title="Budget Mode">
+        💰 Budget
+      </button>
+
+      <button id="toggle-elo" class="toolbar-btn" title="Start Elo 1v1 battles">
+        ⚔️ Elo Sort
+      </button>
+
+      <button id="export-png-btn" class="toolbar-btn" title="Export tierlist as PNG">
+        📸 PNG
+      </button>
+
+      <!-- Budget display (hidden until budget mode is active) -->
+      <div id="budget-display" class="hidden"></div>
     </div>
+
+    <!-- ── Main Content ────────────────────────────────────────────── -->
+    <section class="main-content">
+      <div class="tierlist"></div>
+      <div class="toggleable-container">
+        <div class="bottom-container">
+          <div class="buttons-container">
+            <div class="button">
+              <label for="load-img-input">
+                <img src="assets/plus.png" title="Add images" alt="Add"/>
+              </label>
+              <input id="load-img-input" type="file" accept="image/*" multiple/>
+            </div>
+            <div class="button">
+              <label for="reset-list-input">
+                <img src="assets/reset.png" title="Reset list" alt="Reset">
+              </label>
+              <input id="reset-list-input" type="button"/>
+            </div>
+            <div class="button">
+              <label for="export-input">
+                <img src="assets/export.png" title="Export JSON" alt="Export">
+              </label>
+              <input id="export-input" type="button"/>
+            </div>
+            <div class="button">
+              <label for="import-input">
+                <img src="assets/import.png" title="Import JSON" alt="Import"/>
+              </label>
+              <input id="import-input" type="file" accept=".json"/>
+            </div>
+          </div>
+          <section class="images"></section>
+        </div>
+        <p class="hint">💡 Drag images to rank them · Right-click a card to add badges · Paste from clipboard</p>
+      </div>
+    </section>
+
+    <!-- ── Top Right Controls ─────────────────────────────────────── -->
+    <div class="top-container">
+      <img id="trash" src="assets/trash_bin.png" title="Delete image (drag here)" alt="Trash"/>
+      <div class="button">
+        <label for="toggle-layout">
+          <img src="assets/toggle_layout.png" title="Toggle Layout" alt="Toggle Layout"/>
+        </label>
+        <input id="toggle-layout" type="button"/>
+      </div>
+    </div>
+
+    <!-- ── Mystery Mode Modal ─────────────────────────────────────── -->
+    <div id="mystery-modal" class="hidden" role="dialog" aria-label="Card Reveal">
+      <div class="mystery-backdrop"></div>
+      <div class="mystery-content">
+        <div class="mystery-card-inner" id="mystery-card-inner">
+          <div class="mystery-card-back">
+            <span class="mystery-question">?</span>
+          </div>
+          <div class="mystery-card-front">
+            <img id="mystery-reveal-img" src="" alt="Revealed card"/>
+          </div>
+        </div>
+        <div id="mystery-shockwave" class="mystery-shockwave"></div>
+        <p class="mystery-hint">Click anywhere to place this card</p>
+      </div>
+    </div>
+
+    <!-- ── Elo Battle Modal ──────────────────────────────────────── -->
+    <div id="elo-modal" class="hidden" role="dialog" aria-label="Elo Battle">
+      <div class="elo-backdrop"></div>
+      <div class="elo-content">
+        <div class="elo-header">
+          <h2 class="elo-title">⚔️ Elo Battle</h2>
+          <span id="elo-progress" class="elo-progress">Match 1 / ?</span>
+          <button id="elo-close" class="elo-close-btn" title="Finish and apply results">✕ Finish</button>
+        </div>
+        <div class="elo-arena">
+          <div id="elo-left" class="elo-card">
+            <img src="" alt="Left card"/>
+            <span class="elo-score">⚡ 1000</span>
+            <button id="elo-pick-left" class="elo-pick-btn">◀ Pick</button>
+          </div>
+          <div class="elo-vs-col">
+            <div class="elo-vs">VS</div>
+          </div>
+          <div id="elo-right" class="elo-card">
+            <img src="" alt="Right card"/>
+            <span class="elo-score">⚡ 1000</span>
+            <button id="elo-pick-right" class="elo-pick-btn">Pick ▶</button>
+          </div>
+        </div>
+        <p class="elo-hint">← / → Arrow keys to vote · Esc to finish & apply results</p>
+      </div>
+    </div>
+
   </body>
 </html>

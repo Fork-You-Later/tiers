@@ -8,7 +8,7 @@ function getElementText(elem) {
 	return elem.innerText ?? elem.textContent ?? '';
 }
 
-export function serialize_tierlist(tierlist_div, untiered_images, title_label) {
+export function serialize_tierlist(tierlist_div, untiered_images, title_label, getBadgesForImageFn) {
 	const serialized = {
 		title: getElementText(title_label),
 		rows: [],
@@ -42,7 +42,12 @@ export function serialize_tierlist(tierlist_div, untiered_images, title_label) {
 			});
 
 			row.querySelectorAll('img').forEach((img) => {
-				serialized.rows[i].imgs.push(img.src);
+				const entry = { src: img.src };
+				if (getBadgesForImageFn) {
+					const badges = getBadgesForImageFn(img);
+					if (badges && badges.length > 0) entry.badges = badges;
+				}
+				serialized.rows[i].imgs.push(entry);
 			});
 		});
 	}
@@ -51,23 +56,26 @@ export function serialize_tierlist(tierlist_div, untiered_images, title_label) {
 	if (untiered_imgs.length > 0) {
 		serialized.untiered = [];
 		untiered_imgs.forEach((img) => {
-			serialized.untiered.push(img.src);
+			const entry = { src: img.src };
+			if (getBadgesForImageFn) {
+				const badges = getBadgesForImageFn(img);
+				if (badges && badges.length > 0) entry.badges = badges;
+			}
+			serialized.untiered.push(entry);
 		});
 	}
 
 	return serialized;
 }
 
-export function save_tierlist(filename, tierlist_div, untiered_images, title_label, set_unsaved_changes) {
-	const data = serialize_tierlist(tierlist_div, untiered_images, title_label);
-	if (set_unsaved_changes) {
-		set_unsaved_changes(false);
-	}
+export function save_tierlist(filename, tierlist_div, untiered_images, title_label, set_unsaved_changes, getBadgesForImageFn) {
+	const data = serialize_tierlist(tierlist_div, untiered_images, title_label, getBadgesForImageFn);
+	if (set_unsaved_changes) set_unsaved_changes(false);
 	save(filename, JSON.stringify(data));
 	return data;
 }
 
-export function load_tierlist(serialized_tierlist, title_label, add_row_fn, create_img_fn, resize_headers_fn, recompute_header_colors_fn, untiered_images, set_unsaved_changes) {
+export function load_tierlist(serialized_tierlist, title_label, add_row_fn, create_img_fn, resize_headers_fn, recompute_header_colors_fn, untiered_images, set_unsaved_changes, restoreBadgesFn) {
 	if (!serialized_tierlist) return;
 
 	if (title_label && serialized_tierlist.title !== undefined) {
@@ -79,13 +87,22 @@ export function load_tierlist(serialized_tierlist, title_label, add_row_fn, crea
 		let ser_row = serialized_tierlist.rows[idx];
 		let elem = add_row_fn(idx, ser_row.name);
 
-		for (let img_src of ser_row.imgs ?? []) {
-			let img = create_img_fn(img_src);
+		// Support both old format (array of strings) and new format (array of {src, badges})
+		const imgList = ser_row.imgs ?? [];
+		for (let imgEntry of imgList) {
+			const imgSrc = typeof imgEntry === 'string' ? imgEntry : imgEntry.src;
+			const badges = typeof imgEntry === 'object' ? (imgEntry.badges ?? []) : [];
+
+			let img = create_img_fn(imgSrc);
 			let td = document.createElement('span');
 			td.classList.add('item');
 			td.appendChild(img);
 			let items_container = elem.querySelector('.items');
 			items_container.appendChild(td);
+
+			if (badges.length > 0 && restoreBadgesFn) {
+				restoreBadgesFn(img, badges);
+			}
 		}
 
 		const label = elem.querySelector('label');
@@ -93,31 +110,31 @@ export function load_tierlist(serialized_tierlist, title_label, add_row_fn, crea
 			label.innerText = ser_row.name;
 			label.textContent = ser_row.name;
 		}
-
 		if (ser_row.color !== undefined) {
 			let header = elem.querySelector('.header');
 			header.style.backgroundColor = ser_row.color;
 			const colorPicker = header.querySelector('.row-color-picker');
-			if (colorPicker) {
-				colorPicker.value = ser_row.color;
-			}
+			if (colorPicker) colorPicker.value = ser_row.color;
 		} else if (recompute_header_colors_fn) {
 			recompute_header_colors_fn(idx);
 		}
 	}
 
 	if (serialized_tierlist.untiered && untiered_images) {
-		for (let img_src of serialized_tierlist.untiered) {
-			let img = create_img_fn(img_src);
+		const untieredList = serialized_tierlist.untiered;
+		for (let imgEntry of untieredList) {
+			const imgSrc = typeof imgEntry === 'string' ? imgEntry : imgEntry.src;
+			const badges = typeof imgEntry === 'object' ? (imgEntry.badges ?? []) : [];
+
+			let img = create_img_fn(imgSrc);
 			untiered_images.appendChild(img);
+
+			if (badges.length > 0 && restoreBadgesFn) {
+				restoreBadgesFn(img, badges);
+			}
 		}
 	}
 
-	if (resize_headers_fn) {
-		resize_headers_fn();
-	}
-
-	if (set_unsaved_changes) {
-		set_unsaved_changes(false);
-	}
+	if (resize_headers_fn) resize_headers_fn();
+	if (set_unsaved_changes) set_unsaved_changes(false);
 }

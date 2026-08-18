@@ -46,11 +46,14 @@ describe('serializer.js unit tests', () => {
 		expect(serialized.rows).toHaveLength(2);
 		expect(serialized.rows[0].name).toBe('S');
 		expect(serialized.rows[0].color).toBe('#ff6666');
-		expect(serialized.rows[0].imgs).toEqual(['data:image/png;base64,aaa']);
+		// Updated format: imgs are objects {src, badges?}
+		expect(serialized.rows[0].imgs).toHaveLength(1);
+		expect(serialized.rows[0].imgs[0].src).toBe('data:image/png;base64,aaa');
 		expect(serialized.rows[1].name).toBe('A');
 		expect(serialized.rows[1].color).toBe('#f0a731');
 		expect(serialized.rows[1].imgs).toEqual([]);
-		expect(serialized.untiered).toEqual(['data:image/png;base64,bbb']);
+		expect(serialized.untiered).toHaveLength(1);
+		expect(serialized.untiered[0].src).toBe('data:image/png;base64,bbb');
 	});
 
 	it('should handle load_tierlist to restore title and structure', () => {

@@ -1,10 +1,17 @@
 'use strict';
 
 import { DEFAULT_TIERS, LAYOUT_HORIZONTAL, LAYOUT_VERTICAL } from './constants.js';
-import { is_url } from './utils.js';
+import { is_url, showToast } from './utils.js';
 import { save_tierlist, load_tierlist } from './serializer.js';
 import { TierlistManager } from './tierlist.js';
 import { DragDropManager } from './dragDrop.js';
+import { loadZip } from './zipLoader.js';
+import { isDuplicate, clearHashes } from './deduplication.js';
+import { applyLoopToNewImage, applyGlobalLoopSetting, isLoopEnabled } from './animationControl.js';
+import { enableBadgesOnImage, getBadgesForImage, restoreBadgesOnImage } from './badges.js';
+import { BudgetMode } from './budgetMode.js';
+import { MysteryMode } from './mysteryMode.js';
+import { EloSorter } from './eloSorter.js';
 
 export class App {
 	constructor() {
@@ -14,6 +21,12 @@ export class App {
 		this.titleLabel = null;
 		this.tierlistManager = null;
 		this.dragDropManager = null;
+		this.budgetMode = new BudgetMode();
+		this.mysteryMode = new MysteryMode((img) => {
+			// After a mystery card reveal, enable badges
+			enableBadgesOnImage(img);
+		});
+		this.eloSorter = null;
 	}
 
 	setUnsavedChanges(val) {
@@ -28,15 +41,22 @@ export class App {
 		this.tierlistManager = new TierlistManager(
 			this.tierlistDiv,
 			this.untieredImages,
-			(val) => this.setUnsavedChanges(val)
+			(val) => {
+				this.setUnsavedChanges(val);
+				this.budgetMode.update(this.tierlistDiv);
+			}
 		);
 
 		this.dragDropManager = new DragDropManager(
 			this.tierlistManager,
-			(val) => this.setUnsavedChanges(val)
+			(val) => {
+				this.setUnsavedChanges(val);
+				this.budgetMode.update(this.tierlistDiv);
+			}
 		);
 
 		this.tierlistManager.setMakeAcceptDrop((elem) => this.dragDropManager.makeAcceptDrop(elem));
+		this.eloSorter = new EloSorter(this.tierlistManager);
 
 		for (let i = 0; i < DEFAULT_TIERS.length; ++i) {
 			this.tierlistManager.addRow(i, DEFAULT_TIERS[i]);
@@ -47,10 +67,15 @@ export class App {
 			this.dragDropManager.makeAcceptDrop(this.untieredImages);
 		}
 
+		// Budget display
+		const budgetDisplay = document.getElementById('budget-display');
+		if (budgetDisplay) this.budgetMode.setDisplayElement(budgetDisplay);
+
 		this.bindTitleEvents();
 		this.bindFileInputEvents();
 		this.bindClipboardEvents();
 		this.bindButtonEvents();
+		this.bindToolbarEvents();
 		this.dragDropManager.bindTrashEvents();
 		this.bindToggleLayoutEvents();
 		this.bindBeforeUnload();
@@ -66,74 +91,119 @@ export class App {
 		}
 	}
 
+	// ── Image creation with all feature hooks ──────────────────────────────
+	createImage(src) {
+		const img = this.dragDropManager.createImgWithSrc(src);
+		applyLoopToNewImage(img);
+		enableBadgesOnImage(img);
+
+		// Deduplication: tag new images for reference (async hash in zip flow)
+		if (this.mysteryMode.enabled) {
+			this.mysteryMode.wrapNewImage(img);
+		}
+		return img;
+	}
+
+	async addImageBlobToPool(blob) {
+		if (await isDuplicate(blob)) return null;
+		const url = URL.createObjectURL(blob);
+		const img = this.createImage(url);
+		this.untieredImages.appendChild(img);
+		this.setUnsavedChanges(true);
+		return img;
+	}
+
+	// ── File input (images + ZIP) ──────────────────────────────────────────
 	bindFileInputEvents() {
 		const loadImgInput = document.getElementById('load-img-input');
 		if (loadImgInput) {
-			loadImgInput.addEventListener('input', (evt) => {
-				let images = document.querySelector('.images');
+			loadImgInput.addEventListener('input', async (evt) => {
+				let added = 0;
+				let dupes = 0;
 				for (let file of evt.target.files) {
-					let reader = new FileReader();
-					reader.addEventListener('load', (load_evt) => {
-						let img = this.dragDropManager.createImgWithSrc(load_evt.target.result);
-						images.appendChild(img);
+					if (file.type.startsWith('image/')) {
+						const isDupe = await isDuplicate(file);
+						if (isDupe) { dupes++; continue; }
+						const reader = new FileReader();
+						reader.addEventListener('load', (load_evt) => {
+							const img = this.createImage(load_evt.target.result);
+							this.untieredImages.appendChild(img);
+							this.setUnsavedChanges(true);
+						});
+						reader.readAsDataURL(file);
+						added++;
+					}
+				}
+				if (dupes > 0) showToast(`🖼️ ${added} added, ${dupes} duplicate${dupes !== 1 ? 's' : ''} skipped`);
+				evt.target.value = '';
+			});
+		}
+
+		const loadZipInput = document.getElementById('load-zip-input');
+		if (loadZipInput) {
+			loadZipInput.addEventListener('input', async (evt) => {
+				const file = evt.target.files[0];
+				if (!file) return;
+				showToast('📦 Extracting ZIP…');
+				try {
+					await loadZip(file, (blob) => {
+						const url = URL.createObjectURL(blob);
+						const img = this.createImage(url);
+						this.untieredImages.appendChild(img);
 						this.setUnsavedChanges(true);
 					});
-					reader.readAsDataURL(file);
+				} catch (e) {
+					showToast('❌ Failed to extract ZIP: ' + e.message);
+					console.error(e);
 				}
+				evt.target.value = '';
 			});
 		}
 
 		const importInput = document.getElementById('import-input');
 		if (importInput) {
 			importInput.addEventListener('input', (evt) => {
-				if (!evt.target.files || !evt.target.files.length) {
-					return;
-				}
+				if (!evt.target.files || !evt.target.files.length) return;
 				let file = evt.target.files[0];
 				let reader = new FileReader();
 				reader.addEventListener('load', (load_evt) => {
-					let raw = load_evt.target.result;
 					let parsed;
-					try {
-						parsed = JSON.parse(raw);
-					} catch (e) {
-						alert("Failed to parse data");
-						return;
-					}
-					if (!parsed) {
-						alert("Failed to parse data");
-						return;
-					}
+					try { parsed = JSON.parse(load_evt.target.result); }
+					catch { alert("Failed to parse JSON data"); return; }
+					if (!parsed) { alert("Failed to parse data"); return; }
 					this.tierlistManager.hardResetList();
+					clearHashes();
 					load_tierlist(
 						parsed,
 						this.titleLabel,
 						(idx, name) => this.tierlistManager.addRow(idx, name),
-						(src) => this.dragDropManager.createImgWithSrc(src),
+						(src) => this.createImage(src),
 						() => this.tierlistManager.resizeHeaders(),
 						(idx) => this.tierlistManager.recomputeHeaderColors(idx),
 						this.untieredImages,
-						(val) => this.setUnsavedChanges(val)
+						(val) => this.setUnsavedChanges(val),
+						restoreBadgesOnImage
 					);
 				});
 				reader.readAsText(file);
+				evt.target.value = '';
 			});
 		}
 	}
 
 	bindClipboardEvents() {
-		document.onpaste = (evt) => {
+		document.onpaste = async (evt) => {
 			let clip_data = evt.clipboardData || evt.originalEvent?.clipboardData;
 			if (!clip_data) return;
-			let items = clip_data.items;
-			let images = document.querySelector('.images');
-			for (let item of items) {
+			for (let item of clip_data.items) {
 				if (item.kind === 'file') {
 					let blob = item.getAsFile();
+					const isDupe = await isDuplicate(blob);
+					if (isDupe) { showToast('📋 Duplicate image skipped'); continue; }
 					let reader = new FileReader();
 					reader.onload = (load_evt) => {
-						let img = this.dragDropManager.createImgWithSrc(load_evt.target.result);
-						images.appendChild(img);
+						let img = this.createImage(load_evt.target.result);
+						this.untieredImages.appendChild(img);
 						this.setUnsavedChanges(true);
 					};
 					reader.readAsDataURL(blob);
@@ -142,12 +212,14 @@ export class App {
 		};
 	}
 
+	// ── Toolbar & Feature Buttons ──────────────────────────────────────────
 	bindButtonEvents() {
 		const resetBtn = document.getElementById('reset-list-input');
 		if (resetBtn) {
 			resetBtn.addEventListener('click', () => {
 				if (confirm('Reset Tierlist? (this will place all images back in the pool)')) {
 					this.tierlistManager.softResetList();
+					this.budgetMode.update(this.tierlistDiv);
 				}
 			});
 		}
@@ -162,8 +234,98 @@ export class App {
 						this.tierlistDiv,
 						this.untieredImages,
 						this.titleLabel,
-						(val) => this.setUnsavedChanges(val)
+						(val) => this.setUnsavedChanges(val),
+						getBadgesForImage
 					);
+				}
+			});
+		}
+	}
+
+	bindToolbarEvents() {
+		// Mystery Mode toggle
+		const mysteryToggle = document.getElementById('toggle-mystery');
+		if (mysteryToggle) {
+			mysteryToggle.addEventListener('click', () => {
+				const enabled = !this.mysteryMode.enabled;
+				if (enabled) {
+					this.mysteryMode.enable();
+					mysteryToggle.classList.add('active');
+					mysteryToggle.title = 'Mystery Mode: ON';
+					showToast('🃏 Mystery Mode ON — click cards to reveal!');
+				} else {
+					this.mysteryMode.disable();
+					mysteryToggle.classList.remove('active');
+					mysteryToggle.title = 'Mystery Mode: OFF';
+					showToast('🃏 Mystery Mode OFF');
+				}
+			});
+		}
+
+		// Loop toggle
+		const loopToggle = document.getElementById('toggle-loop');
+		if (loopToggle) {
+			loopToggle.addEventListener('click', async () => {
+				const newEnabled = !isLoopEnabled();
+				const allImgs = document.querySelectorAll('.images img.draggable, .tierlist img.draggable');
+				await applyGlobalLoopSetting(newEnabled, allImgs);
+				loopToggle.classList.toggle('active', !newEnabled);
+				loopToggle.title = newEnabled ? 'Animations: ON' : 'Animations: OFF (hover to preview)';
+				showToast(newEnabled ? '▶️ Animations enabled' : '⏸️ Animations frozen');
+			});
+		}
+
+		// Budget Mode toggle
+		const budgetToggle = document.getElementById('toggle-budget');
+		if (budgetToggle) {
+			budgetToggle.addEventListener('click', () => {
+				if (this.budgetMode.enabled) {
+					this.budgetMode.disable();
+					budgetToggle.classList.remove('active');
+					showToast('💰 Budget Mode OFF');
+				} else {
+					const val = prompt('Set total budget (number of points):', this.budgetMode.budget);
+					if (val === null) return;
+					const budget = parseFloat(val) || 15;
+					this.budgetMode.enable(budget);
+					budgetToggle.classList.add('active');
+					this.budgetMode.update(this.tierlistDiv);
+					showToast(`💰 Budget Mode ON — $${budget} budget`);
+				}
+			});
+		}
+
+		// Elo sorter launch
+		const eloBtn = document.getElementById('toggle-elo');
+		if (eloBtn) {
+			eloBtn.addEventListener('click', () => {
+				this.eloSorter.start();
+			});
+		}
+
+		// PNG Export
+		const pngBtn = document.getElementById('export-png-btn');
+		if (pngBtn) {
+			pngBtn.addEventListener('click', async () => {
+				try {
+					showToast('📸 Capturing tierlist…');
+					const { toPng } = await import('html-to-image');
+					// Temporarily hide control buttons for clean export
+					const buttons = this.tierlistDiv.querySelectorAll('.row-buttons');
+					buttons.forEach(b => b.style.visibility = 'hidden');
+
+					const dataUrl = await toPng(this.tierlistDiv, { cacheBust: true, pixelRatio: 2 });
+
+					buttons.forEach(b => b.style.visibility = '');
+
+					const link = document.createElement('a');
+					link.download = 'tierlist.png';
+					link.href = dataUrl;
+					link.click();
+					showToast('✅ PNG exported!');
+				} catch (e) {
+					console.error(e);
+					showToast('❌ PNG export failed: ' + e.message);
 				}
 			});
 		}
@@ -196,28 +358,25 @@ export class App {
 				let result = await fetch(load_from_url);
 				result = await result.json();
 				this.tierlistManager.hardResetList();
+				clearHashes();
 				load_tierlist(
 					result,
 					this.titleLabel,
 					(idx, name) => this.tierlistManager.addRow(idx, name),
-					(src) => this.dragDropManager.createImgWithSrc(src),
+					(src) => this.createImage(src),
 					() => this.tierlistManager.resizeHeaders(),
 					(idx) => this.tierlistManager.recomputeHeaderColors(idx),
 					this.untieredImages,
-					(val) => this.setUnsavedChanges(val)
+					(val) => this.setUnsavedChanges(val),
+					restoreBadgesOnImage
 				);
-			} catch (e) {
-				console.error(e);
-			}
+			} catch (e) { console.error(e); }
 		}
 	}
 }
 
-// Auto-initialize when loaded in browser environment
 export const app = new App();
 
 if (typeof window !== 'undefined') {
-	window.addEventListener('load', () => {
-		app.init();
-	});
+	window.addEventListener('load', () => { app.init(); });
 }

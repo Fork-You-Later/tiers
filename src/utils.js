@@ -17,7 +17,6 @@ export function is_url(str) {
 	}
 }
 
-// Returns the supplied item's index within a row or bottom container
 export function get_item_index(elem, tierlist_div = document.querySelector('.tierlist')) {
 	if (!elem || !elem.parentNode) return null;
 	const parent_div = (elem.parentNode && elem.parentNode.parentNode && elem.parentNode.parentNode.parentNode)
@@ -37,8 +36,6 @@ export function get_item_index(elem, tierlist_div = document.querySelector('.tie
 		const image_node_list = parent_div.querySelectorAll("img");
 		for (let i = 0; i < image_node_list.length; i++) {
 			if (image_node_list[i] === elem) {
-				// '-4' accounts for the four images in the buttons-container
-				// required as part of the parent div changing for moved items
 				return i - 4;
 			}
 		}
@@ -54,4 +51,35 @@ export function save(filename, text) {
 	document.body.appendChild(el);
 	el.click();
 	document.body.removeChild(el);
+}
+
+// ── Toast Notification ──────────────────────────────────────────────────────
+let _toastContainer = null;
+
+function getToastContainer() {
+	if (!_toastContainer) {
+		_toastContainer = document.createElement('div');
+		_toastContainer.id = 'toast-container';
+		document.body.appendChild(_toastContainer);
+	}
+	return _toastContainer;
+}
+
+export function showToast(message, durationMs = 2800) {
+	if (typeof document === 'undefined') return;
+	const container = getToastContainer();
+	const toast = document.createElement('div');
+	toast.className = 'toast';
+	toast.textContent = message;
+	container.appendChild(toast);
+
+	// Trigger entrance animation on next frame
+	requestAnimationFrame(() => {
+		requestAnimationFrame(() => toast.classList.add('toast--visible'));
+	});
+
+	setTimeout(() => {
+		toast.classList.remove('toast--visible');
+		toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+	}, durationMs);
 }
