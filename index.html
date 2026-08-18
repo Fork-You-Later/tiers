@@ -208,12 +208,11 @@
     <div id="mystery-modal" class="hidden" role="dialog" aria-label="Card Reveal">
       <div class="mystery-backdrop"></div>
       <div class="mystery-content">
+        <!-- Single card face — JS swaps content at mid-spin to avoid CSS backface bugs -->
         <div class="mystery-card-inner" id="mystery-card-inner">
-          <div class="mystery-card-back">
+          <div id="mystery-card-face" class="mystery-card-face mystery-card-face--back">
             <span class="mystery-question">?</span>
-          </div>
-          <div class="mystery-card-front">
-            <img id="mystery-reveal-img" src="" alt="Revealed card"/>
+            <img id="mystery-reveal-img" src="" alt="Revealed card" style="display:none;"/>
           </div>
         </div>
         <div id="mystery-shockwave" class="mystery-shockwave"></div>

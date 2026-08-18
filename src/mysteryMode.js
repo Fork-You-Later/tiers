@@ -77,36 +77,60 @@ export class MysteryMode {
 		img.style.display = 'none';
 	}
 
+	/**
+	 * Run the Clash Royale multi-stage reveal animation.
+	 * Uses a SINGLE card face element — we swap content mid-animation via JS
+	 * (when card is edge-on at ~90°) to avoid CSS backface-visibility bugs in Chromium.
+	 */
 	async _triggerReveal(img, wrapper) {
 		const modal = this._getModal();
 		if (!modal) return;
 
+		const cardFace = modal.querySelector('#mystery-card-face');
 		const revealImg = modal.querySelector('#mystery-reveal-img');
+		const questionMark = modal.querySelector('.mystery-question');
+		const inner = modal.querySelector('.mystery-card-inner');
+		const shockwave = modal.querySelector('#mystery-shockwave');
+
+		// Pre-load the image source before animation starts
 		if (revealImg) revealImg.src = img.dataset.animatedSrc || img.src;
+
+		// Reset card to back state
+		if (cardFace) {
+			cardFace.classList.remove('mystery-card-face--front');
+			cardFace.classList.add('mystery-card-face--back');
+		}
 
 		// Show modal
 		modal.classList.remove('hidden');
 		modal.classList.add('mystery-active');
 
-		const inner = modal.querySelector('.mystery-card-inner');
-		const shockwave = modal.querySelector('#mystery-shockwave');
-
-		// Step 1: multi-stage Clash Royale card reveal animation (2.2s duration)
+		// Step 1: Kick off the spin animation
 		if (inner) {
-			inner.classList.remove('flipped');
-			void inner.offsetWidth;
-			inner.classList.add('flipped');
+			inner.classList.remove('spinning');
+			void inner.offsetWidth; // Force reflow to restart animation
+			inner.classList.add('spinning');
 		}
 
-		// Step 2: shockwave burst right at the 180° card flip impact (~1870ms)
-		await this._delay(1870);
+		// Step 2: At 45% of 2.2s = ~990ms, card is at 720deg (facing forward).
+		// This is the PERFECT moment to swap: card has just finished the spin-up stage
+		// and is briefly facing front before the wind-up tilt starts.
+		// We swap content here — totally invisible because the card immediately tilts away.
+		await this._delay(990);
+		if (cardFace) {
+			cardFace.classList.remove('mystery-card-face--back');
+			cardFace.classList.add('mystery-card-face--front');
+		}
+
+		// Step 3: Shockwave burst at impact (85% of 2.2s = ~1870ms)
+		await this._delay(880); // 990 + 880 = 1870ms total
 		if (shockwave) {
 			shockwave.classList.remove('shockwave-burst');
 			void shockwave.offsetWidth;
 			shockwave.classList.add('shockwave-burst');
 		}
 
-		// Step 3: Wait for user to click modal to dismiss
+		// Step 4: Wait for user to click modal to dismiss
 		await new Promise(resolve => {
 			this._pendingResolve = resolve;
 			modal.addEventListener('click', resolve, { once: true });
@@ -114,7 +138,13 @@ export class MysteryMode {
 
 		modal.classList.remove('mystery-active');
 		modal.classList.add('hidden');
-		if (inner) inner.classList.remove('flipped');
+		if (inner) inner.classList.remove('spinning');
+
+		// Reset card face back for next use
+		if (cardFace) {
+			cardFace.classList.remove('mystery-card-face--front');
+			cardFace.classList.add('mystery-card-face--back');
+		}
 
 		// Reveal the actual image in the pool
 		this.revealedSet.add(img);
@@ -138,22 +168,37 @@ export class MysteryMode {
 		const modal = this._getModal();
 		if (!modal) return;
 
+		const cardFace = modal.querySelector('#mystery-card-face');
 		const revealImg = modal.querySelector('#mystery-reveal-img');
+		const inner = modal.querySelector('.mystery-card-inner');
+		const shockwave = modal.querySelector('#mystery-shockwave');
+
 		if (revealImg) revealImg.src = img.dataset.animatedSrc || img.src;
+
+		// Reset to back state
+		if (cardFace) {
+			cardFace.classList.remove('mystery-card-face--front');
+			cardFace.classList.add('mystery-card-face--back');
+		}
 
 		modal.classList.remove('hidden');
 		modal.classList.add('mystery-active');
 
-		const inner = modal.querySelector('.mystery-card-inner');
-		const shockwave = modal.querySelector('#mystery-shockwave');
-
 		if (inner) {
-			inner.classList.remove('flipped');
+			inner.classList.remove('spinning');
 			void inner.offsetWidth;
-			inner.classList.add('flipped');
+			inner.classList.add('spinning');
 		}
 
-		await this._delay(1870);
+		// Swap content at 45% of animation (~990ms)
+		await this._delay(990);
+		if (cardFace) {
+			cardFace.classList.remove('mystery-card-face--back');
+			cardFace.classList.add('mystery-card-face--front');
+		}
+
+		// Shockwave at impact (~1870ms)
+		await this._delay(880);
 		if (shockwave) {
 			shockwave.classList.remove('shockwave-burst');
 			void shockwave.offsetWidth;
@@ -166,7 +211,13 @@ export class MysteryMode {
 
 		modal.classList.remove('mystery-active');
 		modal.classList.add('hidden');
-		if (inner) inner.classList.remove('flipped');
+		if (inner) inner.classList.remove('spinning');
+
+		// Reset for next use
+		if (cardFace) {
+			cardFace.classList.remove('mystery-card-face--front');
+			cardFace.classList.add('mystery-card-face--back');
+		}
 	}
 
 	attachPreviewOnClick(img) {
