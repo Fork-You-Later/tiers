@@ -141,17 +141,20 @@ export function enableBadgesOnImage(imgElem) {
 		showContextMenu(e.clientX, e.clientY, imgElem);
 	});
 
-	// Long-press support for mobile
-	let longPressTimer;
-	imgElem.addEventListener('touchstart', (e) => {
-		longPressTimer = setTimeout(() => {
-			const touch = e.touches[0];
-			showContextMenu(touch.clientX, touch.clientY, imgElem);
-		}, 500);
+	// Mobile touch device tracking
+	let isTouchDevice = false;
+	imgElem.addEventListener('touchstart', () => {
+		isTouchDevice = true;
 	}, { passive: true });
-	imgElem.addEventListener('touchend', () => clearTimeout(longPressTimer));
-	imgElem.addEventListener('touchmove', () => clearTimeout(longPressTimer));
-	imgElem.addEventListener('dragstart', () => clearTimeout(longPressTimer));
+
+	// On mobile, show badges context menu on simple click instead
+	imgElem.addEventListener('click', (e) => {
+		if (isTouchDevice) {
+			e.preventDefault();
+			e.stopPropagation();
+			showContextMenu(e.clientX, e.clientY, imgElem);
+		}
+	});
 }
 
 /**
