@@ -112,6 +112,7 @@ export class DragDropManager {
 
 		elem.addEventListener('drop', (evt) => {
 			evt.preventDefault();
+			evt.stopPropagation();
 			evt.target.classList.remove('drag-entered');
 
 			if (!this.draggedImage) {
@@ -120,13 +121,20 @@ export class DragDropManager {
 
 			let old_item_row;
 			let dragged_image_parent = this.draggedImage.parentNode;
-			if (dragged_image_parent && dragged_image_parent.tagName.toUpperCase() === 'SPAN' &&
-				dragged_image_parent.classList.contains('item')) {
-				let containing_tr = dragged_image_parent.parentNode;
-				old_item_row = containing_tr ? containing_tr.parentNode : null;
-				if (containing_tr) containing_tr.removeChild(dragged_image_parent);
-			} else if (dragged_image_parent) {
-				dragged_image_parent.removeChild(this.draggedImage);
+
+			// Helper: Cleanly remove dragged image and any parent wrapper (.item or .mystery-wrapper)
+			if (dragged_image_parent) {
+				if (dragged_image_parent.classList.contains('item') || dragged_image_parent.classList.contains('mystery-wrapper')) {
+					let containing_container = dragged_image_parent.parentNode;
+					if (containing_container) {
+						if (containing_container.classList.contains('items')) {
+							old_item_row = containing_container.parentNode;
+						}
+						containing_container.removeChild(dragged_image_parent);
+					}
+				} else {
+					dragged_image_parent.removeChild(this.draggedImage);
+				}
 			}
 
 			let td = document.createElement('span');
@@ -137,14 +145,16 @@ export class DragDropManager {
 				items_container = elem;
 			}
 
-			if (items_container.parentNode === old_item_row && this.oldItemIndex < target_item_index) {
+			if (items_container.parentNode === old_item_row && this.oldItemIndex !== null && target_item_index !== undefined && this.oldItemIndex < target_item_index) {
 				target_item_index = target_item_index - 1;
 			}
 
 			if (evt.target.classList.contains("row")) {
 				items_container.appendChild(td);
-			} else {
+			} else if (target_item_index !== undefined && target_item_index !== null && items_container.children[target_item_index]) {
 				items_container.insertBefore(td, items_container.children[target_item_index]);
+			} else {
+				items_container.appendChild(td);
 			}
 
 			this.onUnsavedChange(true);

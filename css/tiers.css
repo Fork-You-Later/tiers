@@ -421,7 +421,10 @@ input[type="file"] {
 .main-content.vertical {
   flex-direction: row !important;
   align-items: flex-start;
-  gap: 20px;
+  gap: 14px;
+  max-width: 98vw;
+  width: 98vw;
+  padding: 12px 10px 80px;
 }
 .vertical .tierlist { flex: 1 1 0; min-width: 0; }
 .vertical .toggleable-container {

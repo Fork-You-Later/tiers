@@ -228,6 +228,7 @@ export class App {
 
 		window.addEventListener('dragenter', (e) => {
 			e.preventDefault();
+			if (this.dragDropManager && this.dragDropManager.draggedImage) return;
 			dragCounter++;
 			if (e.dataTransfer && e.dataTransfer.types && Array.from(e.dataTransfer.types).includes('Files')) {
 				if (dropOverlay) dropOverlay.classList.remove('hidden');
@@ -236,6 +237,7 @@ export class App {
 
 		window.addEventListener('dragleave', (e) => {
 			e.preventDefault();
+			if (this.dragDropManager && this.dragDropManager.draggedImage) return;
 			dragCounter--;
 			if (dragCounter <= 0 && dropOverlay) {
 				dropOverlay.classList.add('hidden');
@@ -251,6 +253,7 @@ export class App {
 			e.preventDefault();
 			dragCounter = 0;
 			if (dropOverlay) dropOverlay.classList.add('hidden');
+			if (this.dragDropManager && this.dragDropManager.draggedImage) return;
 
 			if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
 				for (let file of e.dataTransfer.files) {
@@ -397,7 +400,7 @@ export class App {
 				const newEnabled = !isLoopEnabled();
 				const allImgs = document.querySelectorAll('.images img.draggable, .tierlist img.draggable');
 				await applyGlobalLoopSetting(newEnabled, allImgs);
-				loopToggle.classList.toggle('active', !newEnabled);
+				loopToggle.classList.toggle('active', newEnabled);
 				loopToggle.setAttribute('aria-checked', newEnabled ? 'true' : 'false');
 				showToast(newEnabled ? '▶️ Animations enabled' : '⏸️ Animations frozen');
 			});
