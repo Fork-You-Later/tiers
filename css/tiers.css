@@ -466,6 +466,7 @@ img.draggable.dragged {
   align-items: center;
   justify-content: center;
   box-shadow: var(--shadow);
+  cursor: pointer;
   transition: transform var(--transition), border-color var(--transition), background var(--transition);
 }
 #floating-trash-container:hover {
@@ -475,14 +476,167 @@ img.draggable.dragged {
 }
 
 #trash {
-  opacity: 0.6;
+  opacity: 0.7;
   transition: opacity var(--transition), filter var(--transition), transform var(--transition);
   height: 32px;
   width: 32px;
   object-fit: contain;
   cursor: pointer;
+  pointer-events: none;
 }
 #floating-trash-container:hover #trash { opacity: 1; filter: drop-shadow(0 0 8px var(--accent)); }
+
+/* ── Delete Images / Trash Manager Modal ─────────────────────────── */
+#trash-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 6000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#trash-modal.hidden { display: none; }
+
+.trash-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 10, 26, 0.9);
+  backdrop-filter: blur(10px);
+}
+
+.trash-content {
+  position: relative;
+  z-index: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  max-width: 680px;
+  width: 92vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--shadow);
+  animation: fadeInScale 180ms ease;
+}
+
+.trash-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.trash-title {
+  font-size: 20px;
+  font-weight: 700;
+  flex: 1;
+}
+.trash-count {
+  font-size: 13px;
+  color: var(--text-dim);
+  background: var(--bg-2);
+  padding: 4px 12px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+}
+.trash-close-btn {
+  padding: 6px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.trash-close-btn:hover { background: var(--accent); border-color: var(--accent); }
+
+.trash-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.trash-action-btn {
+  padding: 8px 16px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+}
+.trash-action-btn:hover { background: var(--surface-2); border-color: var(--border); }
+.trash-action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.trash-btn-danger {
+  background: rgba(233,69,96,0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.trash-btn-danger:hover:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+}
+
+.trash-btn-nuclear {
+  background: rgba(124,58,237,0.2);
+  border-color: var(--purple);
+  color: var(--text);
+  margin-left: auto;
+}
+.trash-btn-nuclear:hover {
+  background: var(--purple);
+  color: #fff;
+}
+
+.trash-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  overflow-y: auto;
+  max-height: 450px;
+  padding: 8px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.trash-tile {
+  width: 90px;
+  height: 90px;
+  position: relative;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--surface);
+  transition: transform 120ms, border-color 120ms;
+}
+.trash-tile:hover { transform: scale(1.05); }
+.trash-tile.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(233,69,96,0.5);
+}
+.trash-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.trash-checkbox {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
 
 /* ── Hint Text ───────────────────────────────────────────────────── */
 .hint {

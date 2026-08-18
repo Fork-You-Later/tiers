@@ -13,6 +13,7 @@ import { BudgetMode } from './budgetMode.js';
 import { MysteryMode } from './mysteryMode.js';
 import { EloSorter } from './eloSorter.js';
 import { saveToStorage, loadFromStorage, clearStorage } from './storage.js';
+import { TrashModalManager } from './trashModal.js';
 
 export class App {
 	constructor() {
@@ -27,6 +28,7 @@ export class App {
 			enableBadgesOnImage(img);
 		});
 		this.eloSorter = null;
+		this.trashModalManager = null;
 		this._autoSaveTimer = null;
 	}
 
@@ -74,6 +76,11 @@ export class App {
 			}
 		);
 
+		this.trashModalManager = new TrashModalManager(() => {
+			this.setUnsavedChanges(true);
+			this.budgetMode.update(this.tierlistDiv);
+		});
+
 		this.tierlistManager.setMakeAcceptDrop((elem) => this.dragDropManager.makeAcceptDrop(elem));
 		this.eloSorter = new EloSorter(this.tierlistManager);
 
@@ -95,6 +102,7 @@ export class App {
 		this.bindClipboardEvents();
 		this.bindButtonEvents();
 		this.bindToolbarEvents();
+		this.bindTrashModalEvents();
 		this.dragDropManager.bindTrashEvents();
 		this.bindToggleLayoutEvents();
 		this.bindBeforeUnload();
@@ -114,7 +122,6 @@ export class App {
 		}
 	}
 
-	// ── Image creation with all feature hooks ──────────────────────────────
 	createImage(src, hash = null) {
 		const img = this.dragDropManager.createImgWithSrc(src);
 		if (hash) {
@@ -126,9 +133,6 @@ export class App {
 		return img;
 	}
 
-	/**
-	 * Appends an image to the untiered pool and applies mystery mode wrapping if active.
-	 */
 	appendImageToPool(img) {
 		if (!this.untieredImages || !img) return;
 		this.untieredImages.appendChild(img);
@@ -138,7 +142,6 @@ export class App {
 		this.setUnsavedChanges(true);
 	}
 
-	// ── File input (images + ZIP) ──────────────────────────────────────────
 	bindFileInputEvents() {
 		const loadImgInput = document.getElementById('load-img-input');
 		if (loadImgInput) {
@@ -171,10 +174,8 @@ export class App {
 				if (!file) return;
 				showToast('📦 Extracting ZIP…');
 				try {
-					await loadZip(file, async (blob) => {
-						const hash = await computeHash(blob);
-						const url = URL.createObjectURL(blob);
-						const img = this.createImage(url, hash);
+					await loadZip(file, (dataUrl, filename, hash) => {
+						const img = this.createImage(dataUrl, hash);
 						this.appendImageToPool(img);
 					});
 				} catch (e) {
@@ -237,7 +238,6 @@ export class App {
 		};
 	}
 
-	// ── Toolbar & Buttons ──────────────────────────────────────────────────
 	bindButtonEvents() {
 		const resetBtn = document.getElementById('reset-list-input');
 		if (resetBtn) {
@@ -267,8 +267,19 @@ export class App {
 		}
 	}
 
+	bindTrashModalEvents() {
+		const trashContainer = document.getElementById('floating-trash-container');
+		if (trashContainer) {
+			trashContainer.addEventListener('click', (e) => {
+				// Only open trash modal if not actively dragging an image onto it
+				if (!this.dragDropManager.draggedImage) {
+					this.trashModalManager.open();
+				}
+			});
+		}
+	}
+
 	bindToolbarEvents() {
-		// Toggle Popover Menu for Feature Toolbar
 		const menuToggleBtn = document.getElementById('toggle-tools-menu');
 		const toolbar = document.getElementById('feature-toolbar');
 		if (menuToggleBtn && toolbar) {
@@ -285,7 +296,6 @@ export class App {
 			});
 		}
 
-		// Mystery Mode toggle
 		const mysteryToggle = document.getElementById('toggle-mystery');
 		if (mysteryToggle) {
 			mysteryToggle.addEventListener('click', () => {
@@ -304,7 +314,6 @@ export class App {
 			});
 		}
 
-		// Loop toggle
 		const loopToggle = document.getElementById('toggle-loop');
 		if (loopToggle) {
 			loopToggle.addEventListener('click', async () => {
@@ -317,7 +326,6 @@ export class App {
 			});
 		}
 
-		// Budget Mode toggle
 		const budgetToggle = document.getElementById('toggle-budget');
 		if (budgetToggle) {
 			budgetToggle.addEventListener('click', () => {
@@ -337,7 +345,6 @@ export class App {
 			});
 		}
 
-		// Elo sorter launch
 		const eloBtn = document.getElementById('toggle-elo');
 		if (eloBtn) {
 			eloBtn.addEventListener('click', () => {
@@ -345,7 +352,6 @@ export class App {
 			});
 		}
 
-		// PNG Export with skipFonts to avoid cross-origin CSS exceptions
 		const pngBtn = document.getElementById('export-png-btn');
 		if (pngBtn) {
 			pngBtn.addEventListener('click', async () => {
@@ -358,7 +364,7 @@ export class App {
 					const dataUrl = await toPng(this.tierlistDiv, {
 						cacheBust: true,
 						pixelRatio: 2,
-						skipFonts: true // Prevents cross-origin CSSSecurityError / CORS font errors
+						skipFonts: true
 					});
 
 					buttons.forEach(b => b.style.visibility = '');
@@ -403,7 +409,6 @@ export class App {
 			return true;
 		}
 
-		// Otherwise check localStorage cache
 		const cached = loadFromStorage();
 		if (cached && cached.rows && cached.rows.length > 0) {
 			this.tierlistManager.hardResetList();

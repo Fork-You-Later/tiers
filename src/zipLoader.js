@@ -1,18 +1,29 @@
 'use strict';
 
-import { isDuplicate } from './deduplication.js';
+import { isDuplicate, computeHash } from './deduplication.js';
 import { showToast } from './utils.js';
 
 const IMAGE_EXTENSIONS = /\.(webp|png|jpe?g|gif)$/i;
 
 /**
- * Loads a ZIP file and extracts image entries from it.
+ * Converts a Blob to a persistent Base64 Data URL.
+ */
+export function blobToDataURL(blob) {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = () => resolve(reader.result);
+		reader.onerror = (e) => reject(e);
+		reader.readAsDataURL(blob);
+	});
+}
+
+/**
+ * Loads a ZIP file and extracts image entries as persistent Data URLs.
  * @param {File} file - The ZIP File object.
- * @param {function(Blob, string): void} onImageReady - Called for each unique image blob.
+ * @param {function(string, string, string): void} onImageReady - Called with (dataUrl, filename, hash).
  * @returns {Promise<{total: number, loaded: number, dupes: number}>}
  */
 export async function loadZip(file, onImageReady) {
-	// JSZip is loaded globally via importmap CDN
 	const JSZip = (await import('jszip')).default;
 
 	let total = 0;
@@ -33,9 +44,10 @@ export async function loadZip(file, onImageReady) {
 			dupes++;
 			continue;
 		}
-		// Preserve the filename as metadata
-		const namedBlob = new File([blob], name.split('/').pop(), { type: blob.type });
-		onImageReady(namedBlob, name);
+		const hash = await computeHash(blob);
+		const dataUrl = await blobToDataURL(blob);
+		const filename = name.split('/').pop();
+		onImageReady(dataUrl, filename, hash);
 		loaded++;
 	}
 

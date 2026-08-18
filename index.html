@@ -116,12 +116,12 @@
           </div>
           <section class="images"></section>
         </div>
-        <p class="hint">💡 Drag images to rank them · Right-click a card to add badges · Paste from clipboard</p>
+        <p class="hint">💡 Drag images to rank them · Right-click a card to add badges · Click trash icon to delete images</p>
       </div>
     </section>
 
     <!-- ── Bottom Right Floating Trash Bin ───────────────────────────── -->
-    <div id="floating-trash-container" title="Drag image here to delete">
+    <div id="floating-trash-container" title="Click to manage/delete images, or drag an image here to delete it">
       <img id="trash" src="assets/trash_bin.png" alt="Trash"/>
     </div>
 
@@ -167,6 +167,24 @@
           </div>
         </div>
         <p class="elo-hint">← / → Arrow keys to vote · Esc to finish & apply results</p>
+      </div>
+    </div>
+
+    <!-- ── Delete Images / Trash Manager Modal ───────────────────────── -->
+    <div id="trash-modal" class="hidden" role="dialog" aria-label="Delete Images">
+      <div class="trash-backdrop"></div>
+      <div class="trash-content">
+        <div class="trash-header">
+          <h2 class="trash-title">🗑️ Delete Images</h2>
+          <span id="trash-selected-count" class="trash-count">0 of 0 selected</span>
+          <button id="trash-modal-close" class="trash-close-btn" title="Close">✕</button>
+        </div>
+        <div class="trash-actions">
+          <button id="trash-select-all-btn" class="trash-action-btn">Select All</button>
+          <button id="trash-delete-selected-btn" class="trash-action-btn trash-btn-danger" disabled>🗑️ Delete Selected (0)</button>
+          <button id="trash-delete-all-btn" class="trash-action-btn trash-btn-nuclear">⚠️ Delete ALL Images</button>
+        </div>
+        <div class="trash-grid"></div>
       </div>
     </div>
 
