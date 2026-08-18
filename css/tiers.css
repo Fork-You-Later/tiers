@@ -1392,7 +1392,7 @@ img.draggable.dragged {
   padding: 8px;
 }
 
-.mystery-question {
+.mystery-card-face .mystery-question {
   font-size: 120px;
   font-weight: 900;
   color: #fff;
@@ -1453,15 +1453,26 @@ img.draggable.dragged {
   width: 90px;
   height: 90px;
   border-radius: var(--radius);
-  background: linear-gradient(135deg, #1a1a3e, var(--purple));
-  border: 1.5px solid rgba(255,255,255,0.1);
+  background: linear-gradient(135deg, #1b153a 0%, #2e1d5c 50%, #150f2e 100%);
+  border: 2px solid #f39c12;
+  box-shadow: 0 0 0 1px #b8860b, inset 0 0 10px rgba(255, 215, 0, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 32px;
+  overflow: hidden;
   transition: transform var(--dur) var(--ease-spring), box-shadow var(--dur) var(--ease);
 }
+.mystery-face-down .mystery-question {
+  font-size: 42px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.8), 0 0 24px rgba(243, 156, 18, 0.6);
+  animation: floatPool 2.2s ease-in-out infinite;
+  pointer-events: none;
+  line-height: 1;
+}
+@keyframes floatPool { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
 .mystery-face-down:hover {
   transform: scale(1.07);
   box-shadow: 0 0 20px rgba(124,58,237,0.5);
