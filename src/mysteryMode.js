@@ -1,5 +1,7 @@
 'use strict';
 
+import { showBadgeUIForCard } from './badges.js';
+
 export class MysteryMode {
 	constructor(onRevealComplete) {
 		this.enabled = false;
@@ -130,11 +132,24 @@ export class MysteryMode {
 			shockwave.classList.add('shockwave-burst');
 		}
 
+		const badgesContainer = modal.querySelector('#mystery-badges-container');
+		if (badgesContainer) showBadgeUIForCard(img, badgesContainer);
+
 		// Step 4: Wait for user to click modal to dismiss
 		await new Promise(resolve => {
 			this._pendingResolve = resolve;
-			modal.addEventListener('click', resolve, { once: true });
+			const onModalClick = (e) => {
+				if (badgesContainer && badgesContainer.contains(e.target)) {
+					// Ignore clicks on badges UI itself so it doesn't close immediately
+					return;
+				}
+				modal.removeEventListener('click', onModalClick);
+				resolve();
+			};
+			modal.addEventListener('click', onModalClick);
 		});
+
+		if (badgesContainer) badgesContainer.innerHTML = ''; // clear badges
 
 		modal.classList.remove('mystery-active');
 		modal.classList.add('hidden');
@@ -199,9 +214,21 @@ export class MysteryMode {
 			shockwave.classList.add('shockwave-burst');
 		}
 
+		const badgesContainer = modal.querySelector('#mystery-badges-container');
+		if (badgesContainer) showBadgeUIForCard(img, badgesContainer);
+
 		await new Promise(resolve => {
-			modal.addEventListener('click', resolve, { once: true });
+			const onModalClick = (e) => {
+				if (badgesContainer && badgesContainer.contains(e.target)) {
+					return;
+				}
+				modal.removeEventListener('click', onModalClick);
+				resolve();
+			};
+			modal.addEventListener('click', onModalClick);
 		});
+
+		if (badgesContainer) badgesContainer.innerHTML = ''; // clear badges
 
 		modal.classList.remove('mystery-active');
 		modal.classList.add('hidden');
@@ -218,12 +245,12 @@ export class MysteryMode {
 		if (!img || img.dataset.hasPreviewListener) return;
 		img.dataset.hasPreviewListener = 'true';
 		img.addEventListener('click', (e) => {
-			// Only trigger preview when mystery mode is enabled
-			// AND the card is already revealed or is in the tier list
-			if (!this.enabled) return;
-			if (this.revealedSet.has(img) || img.closest('.tierlist')) {
-				this.previewCard(img);
+			// Always trigger preview globally on click for adding badges.
+			// The only exception is if mystery mode is on AND the card is face-down (unrevealed) in the pool.
+			if (this.enabled && !this.revealedSet.has(img) && !img.closest('.tierlist')) {
+				return;
 			}
+			this.previewCard(img);
 		});
 	}
 
