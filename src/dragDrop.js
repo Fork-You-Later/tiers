@@ -23,14 +23,16 @@ export class DragDropManager {
 		img.style.userSelect = 'none';
 		img.classList.add('draggable');
 		img.draggable = true;
-		img.ondragstart = "event.dataTransfer.setData('text/plain', null)";
-		const onDragInit = (evt) => {
+
+		img.addEventListener('dragstart', (evt) => {
+			if (evt.dataTransfer) {
+				evt.dataTransfer.setData('text/plain', null);
+			}
 			this.draggedImage = evt.target;
 			this.draggedImage.classList.add("dragged");
 			this.oldItemIndex = get_item_index(this.draggedImage, this.tierlistManager ? this.tierlistManager.tierlistDiv : null);
-		};
-		img.addEventListener('mousedown', onDragInit);
-		img.addEventListener('touchstart', onDragInit, { passive: true });
+		});
+
 		img.addEventListener('contextmenu', (evt) => {
 			evt.preventDefault();
 		});

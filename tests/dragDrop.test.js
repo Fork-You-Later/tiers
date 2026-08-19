@@ -37,12 +37,13 @@ describe('dragDrop.js DragDropManager unit tests', () => {
 		expect(img.style.userSelect).toBe('none');
 	});
 
-	it('should mark dragged image on mousedown', () => {
+	it('should mark dragged image on dragstart', () => {
 		const img = dragDropManager.createImgWithSrc('test-img.png');
 		document.body.appendChild(img);
 
-		const mouseDownEvt = new MouseEvent('mousedown', { bubbles: true });
-		img.dispatchEvent(mouseDownEvt);
+		const dragStartEvt = new Event('dragstart', { bubbles: true });
+		dragStartEvt.dataTransfer = { setData: vi.fn() };
+		img.dispatchEvent(dragStartEvt);
 
 		expect(dragDropManager.draggedImage).toBe(img);
 		expect(img.classList.contains('dragged')).toBe(true);

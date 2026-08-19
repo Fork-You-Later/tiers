@@ -16,7 +16,13 @@
     }
     </script>
     <script type="module" src="src/app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@dragdroptouch/drag-drop-touch@latest/dist/drag-drop-touch.esm.min.js?autoload" type="module"></script>
+    <script type="module">
+      import { enableDragDropTouch } from 'https://cdn.jsdelivr.net/npm/@dragdroptouch/drag-drop-touch@latest/dist/drag-drop-touch.esm.min.js';
+      enableDragDropTouch(document, document, {
+        isPressHoldMode: true,
+        pressHoldDelayMS: 400
+      });
+    </script>
   </head>
   <body>
 
