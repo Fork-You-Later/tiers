@@ -420,7 +420,7 @@ input[type="file"] {
 /* Vertical layout */
 .main-content.vertical {
   flex-direction: row !important;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 14px;
   max-width: 100%;
   width: 100%;
@@ -430,15 +430,22 @@ input[type="file"] {
 .vertical .toggleable-container {
   flex: 0 0 260px;
   width: 260px;
-  position: sticky;
-  top: 76px;
-  max-height: calc(100vh - 96px);
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
 }
-.vertical .bottom-container { flex-direction: column !important; }
+.vertical .bottom-container {
+  flex-direction: column !important;
+  flex: 1;
+  display: flex;
+}
 .vertical .images {
-  height: calc(100vh - 220px);
+  height: 100%;
+  flex: 1;
   min-height: 240px;
   max-height: unset;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
 }
 
 /* ══════════════════════════════════════════════════════════════════
