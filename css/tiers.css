@@ -422,9 +422,9 @@ input[type="file"] {
   flex-direction: row !important;
   align-items: flex-start;
   gap: 14px;
-  max-width: 98vw;
-  width: 98vw;
-  padding: 12px 10px 80px;
+  max-width: 100%;
+  width: 100%;
+  padding: 12px 20px 80px;
 }
 .vertical .tierlist { flex: 1 1 0; min-width: 0; }
 .vertical .toggleable-container {
@@ -1691,43 +1691,9 @@ img.draggable.dragged {
 /* ══════════════════════════════════════════════════════════════════
    RESPONSIVE
    ══════════════════════════════════════════════════════════════════ */
+/* Clean responsive adjustments */
 @media (max-width: 640px) {
-  .top-bar { padding: 0 12px; height: 52px; }
-  .title-label { font-size: 18px; }
-  .quick-add-btn { font-size: 12px !important; padding: 7px 13px !important; }
-  .tools-menu-btn { font-size: 12px !important; padding: 7px 10px !important; }
-
-  #feature-toolbar.feature-popover {
-    left: 0;
-    right: 0;
-    width: auto;
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    bottom: 0;
-    top: auto;
-    position: fixed;
-    animation: sheetUp var(--dur-slow) var(--ease-spring) both;
-    transform-origin: bottom center;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
-  @keyframes sheetUp {
-    from { transform: translateY(100%); opacity: 0; }
-    to   { transform: translateY(0); opacity: 1; }
-  }
-
-  img.draggable, span.item, .mystery-wrapper, .mystery-face-down {
-    width: 76px !important;
-    height: 76px !important;
-    min-width: 76px !important;
-    min-height: 76px !important;
-  }
-  span.header { width: 80px; min-width: 80px; }
-  span.header label { font-size: 24px; }
-  .elo-card img { width: 96px; height: 96px; }
-  .mystery-card-inner { width: 140px; height: 140px; }
-  .mystery-question { font-size: 60px; }
-  #floating-trash-container { width: 52px; height: 52px; bottom: 20px; right: 16px; border-radius: var(--radius); }
-  #trash-icon-svg { width: 22px; height: 22px; }
-  .trash-float-label { display: none; }
+  .top-bar { padding: 0 20px; }
 }
 
 
