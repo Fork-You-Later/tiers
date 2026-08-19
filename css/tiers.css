@@ -420,25 +420,32 @@ input[type="file"] {
 /* Vertical layout */
 .main-content.vertical {
   flex-direction: row !important;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 14px;
-  max-width: 98vw;
-  width: 98vw;
-  padding: 12px 10px 80px;
+  max-width: 100%;
+  width: 100%;
+  padding: 12px 20px 80px;
 }
 .vertical .tierlist { flex: 1 1 0; min-width: 0; }
 .vertical .toggleable-container {
   flex: 0 0 260px;
   width: 260px;
-  position: sticky;
-  top: 76px;
-  max-height: calc(100vh - 96px);
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
 }
-.vertical .bottom-container { flex-direction: column !important; }
+.vertical .bottom-container {
+  flex-direction: column !important;
+  flex: 1;
+  display: flex;
+}
 .vertical .images {
-  height: calc(100vh - 220px);
+  height: 100%;
+  flex: 1;
   min-height: 240px;
   max-height: unset;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1691,41 +1698,106 @@ img.draggable.dragged {
 /* ══════════════════════════════════════════════════════════════════
    RESPONSIVE
    ══════════════════════════════════════════════════════════════════ */
+/* Clean responsive adjustments */
 @media (max-width: 640px) {
-  .top-bar { padding: 0 12px; height: 52px; }
-  .title-label { font-size: 18px; }
-  .quick-add-btn { font-size: 12px !important; padding: 7px 13px !important; }
-  .tools-menu-btn { font-size: 12px !important; padding: 7px 10px !important; }
+  .top-bar { padding: 0 20px; }
+}
 
-  #feature-toolbar.feature-popover {
-    left: 0;
-    right: 0;
-    width: auto;
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    bottom: 0;
-    top: auto;
-    position: fixed;
-    animation: sheetUp var(--dur-slow) var(--ease-spring) both;
-    transform-origin: bottom center;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
-  @keyframes sheetUp {
-    from { transform: translateY(100%); opacity: 0; }
-    to   { transform: translateY(0); opacity: 1; }
-  }
 
-  img.draggable, span.item, .mystery-wrapper, .mystery-face-down {
-    width: 76px !important;
-    height: 76px !important;
-    min-width: 76px !important;
-    min-height: 76px !important;
-  }
-  span.header { width: 80px; min-width: 80px; }
-  span.header label { font-size: 24px; }
-  .elo-card img { width: 96px; height: 96px; }
-  .mystery-card-inner { width: 140px; height: 140px; }
-  .mystery-question { font-size: 60px; }
-  #floating-trash-container { width: 52px; height: 52px; bottom: 20px; right: 16px; border-radius: var(--radius); }
-  #trash-icon-svg { width: 22px; height: 22px; }
-  .trash-float-label { display: none; }
+/* ══════════════════════════════════════════════════════════════════
+   VIEWPORT & STAGE FOR UNIFORM 16:9 SCALING
+   ══════════════════════════════════════════════════════════════════ */
+#app-viewport {
+  width: 100vw;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: relative;
+}
+
+#app-stage-scaler {
+  width: 1280px;
+  position: relative;
+  flex-shrink: 0;
+  margin: 0 auto;
+}
+
+#app-stage {
+  width: 1280px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transform-origin: top left;
+  transition: transform var(--dur) var(--ease);
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   PORTRAIT WARNING OVERLAY FOR MOBILE
+   ══════════════════════════════════════════════════════════════════ */
+#portrait-warning-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: var(--bg-base);
+  background-image:
+    radial-gradient(ellipse 70% 50% at 50% 30%, rgba(124,58,237,0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 50% 80%, rgba(233,69,96,0.15) 0%, transparent 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+#portrait-warning-overlay.hidden {
+  display: none !important;
+}
+
+.portrait-warning-box {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-xl);
+  padding: 40px 32px;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow-xl);
+  animation: dialogIn var(--dur-slow) var(--ease-spring) both;
+}
+
+.rotate-phone-icon {
+  width: 64px;
+  height: 64px;
+  color: var(--gold);
+  animation: rotatePhone 2.4s ease-in-out infinite;
+}
+.rotate-phone-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes rotatePhone {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-90deg); }
+  75% { transform: rotate(-90deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.portrait-warning-box h3 {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.portrait-warning-box p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }

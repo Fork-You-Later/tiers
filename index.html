@@ -19,6 +19,28 @@
   </head>
   <body>
 
+    <!-- ══════════════ PORTRAIT WARNING OVERLAY FOR MOBILE ══════════════ -->
+    <div id="portrait-warning-overlay" class="hidden" aria-hidden="true">
+      <div class="portrait-warning-box">
+        <div class="rotate-phone-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="3" ry="3"/>
+            <path d="M12 18h.01"/>
+            <path d="M19 9l3 3-3 3"/>
+            <path d="M5 15l-3-3 3-3"/>
+          </svg>
+        </div>
+        <h3>Please Rotate Your Device</h3>
+        <p>This game requires landscape / horizontal screen orientation for the optimal tierlist experience.</p>
+      </div>
+    </div>
+
+
+
+    <div id="app-viewport">
+      <div id="app-stage-scaler">
+        <div id="app-stage">
+
     <!-- ══════════════ HEADER ══════════════ -->
     <header id="app-header">
       <div class="top-bar">
@@ -178,6 +200,10 @@
       <!-- Legacy img element (hidden via CSS) -->
       <img id="trash" src="assets/trash_bin.png" alt="" aria-hidden="true"/>
     </div>
+
+    </div> <!-- /#app-stage -->
+      </div> <!-- /#app-stage-scaler -->
+    </div> <!-- /#app-viewport -->
 
     <!-- ══════════════ FULL-PAGE DROP OVERLAY ══════════════ -->
     <div id="full-page-drop-overlay" class="hidden" aria-hidden="true">
